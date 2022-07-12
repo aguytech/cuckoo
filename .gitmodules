@@ -1,0 +1,3 @@
+[submodule "host/bs"]
+	path = host/bs
+	url = https://github.com/aguytech/bs
