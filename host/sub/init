@@ -1,0 +1,110 @@
+#!/bin/bash
+#
+# write by Aguy
+
+_echoT "\n==========================================  ${_PART}"
+
+########################  DATA
+
+_echot "------------------ desktop"
+if [ -z "${_DESKTOP}" ]; then
+	[ -d /etc/xdg/xfce4 ] && _DESKTOP=xfce
+	[ -d /etc/gdm* ] && _DESKTOP=gnome
+fi
+if [ -z "${_DESKTOP}" ]; then
+	_menu "Select a desktop environement for manjaro" xfce gnome
+	_DESKTOP=${_ANSWER}
+fi
+_confset _DESKTOP "${_DESKTOP}"
+
+########################  MAIN
+
+_echot "------------------ update grub"
+if [ "${_BTRFS}" ];then
+	sudo grub-install ${_DEVICE_GRUB}
+	sudo update-grub
+fi
+
+_echot "------------------ conf sources"
+file=/etc/apt/sources.list
+_keepcp ${file}
+sudo sed -i '/# deb .*partner$/ s|# *||' ${file}
+
+_echot "------------------ create paths"
+paths=" /btrfs/sys /btrfs/ext"
+paths+=" ext/backup ext/ovh ext/shared"
+paths+=" /home/shared"
+for path in ${paths}; do
+	[ -d "${path}" ] || sudo mkdir -p ${path}
+	sudo chown ${USER}:${USER} ${path}
+done
+
+sudo chown root:${USER} /btrfs/sys /btrfs/ext
+sudo chmod g+rwx /btrfs/sys /btrfs/ext
+
+_echot "------------------ permissions ${_PATH_LOG}"
+sudo chown ${USER}:syslog ${_PATH_LOG}
+sudo chmod g+rw ${_PATH_LOG}
+
+_echot "------------------ permissions /ext"
+sudo chown ${USER}:${USER} ext/backup ext/ovh ext/shared /home/shared
+
+_echot "------------------ create user paths"
+paths="${HOME}/.local/bin ${HOME}/.local/share/icons ${HOME}/.local/share/applications"
+for path in ${paths}; do
+	[ -d "${path}" ] || mkdir -p ${path}
+done
+
+_echot "------------------ root user"
+_ask "Give the password for root" && echo -e "${_ANSWER}\n${_ANSWER}" | sudo passwd root
+
+_echot "------------------ conf user"
+sudo adduser ${USER} users
+sudo adduser ${USER} www-data
+sudo adduser ${USER} audio
+sudo adduser ${USER} video
+
+_echot "------------------  .bash_aliases"
+file=${HOME}/.bash_aliases
+file_from=${_PATH_BS}/conf/.bash_aliases
+_keepmv ${file}
+_eval ln -s ${file_from} ${file}
+
+_echot "------------------  .bash_env"
+file=${HOME}/.bash_env
+file_from=${_PATH_BS}/conf/.bash_env
+_keepmv ${file}
+_eval ln -s ${file_from} ${file}
+sudo sed -i "s|_PATH_BS|${_PATH_BS}|" ${file_from}
+
+_echot "------------------  .bashrc"
+file=${HOME}/.bashrc
+_keepcp ${file}
+_eval "sed -i 's|^\(HISTSIZE\)=.*$|\1=20000|' ${file}"
+_eval "sed -i 's|^\(HISTFILESIZE\)=.*$|\1=20000|' ${file}"
+_eval "sed -i '/^#force_color_prompt/ s|^#||' ${file}"
+
+sed -i 's|^#\?\(force_color_prompt\).*$|\1=yes|' ${file}
+# PS1
+color='\\[\\033[01;34m\\]' # '\\[\\033[01;32m\\]'
+sed -i 's|^\(\s*PS1=\).*00m.*$|\1"\${debian_chroot:+(\$debian_chroot)}'${color}'\\u@\\h\\[\\033[00m\\] \\W'${color}'\\$\\[\\033[00m\\] "|' ${file}
+sed -i "/^\s*PS1=.*01;34m/ s|\"|'|g" ${file}
+
+# env
+grep -q ".bash_env" ${file} || echo "
+# global variables
+[ -f \${HOME}/.bash_env ] && . \${HOME}/.bash_env
+
+# functions
+[ -f \${HOME}/.bash_functions ] && . \${HOME}/.bash_functions" >> ${file}
+# aliases
+grep -q ". \${HOME}/.bash_aliases" ${file} || echo "
+# bash_aliases
+[ -f \${HOME}/.bash_aliases ] && . \${HOME}/.bash_aliases"  >> ${file}
+
+. ${file}
+
+########################  END
+
+_echoT "===================== ${_PART} end"
+_partadd "${_PART}" "${_FILE_DONE}"

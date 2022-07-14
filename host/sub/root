@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# write by Aguy
+
+_echoT "\n==========================================  ${_PART}"
+
+########################  MAIN
+
+_echot "------------------  .bash_aliases"
+file=/root/.bash_aliases
+file_from=${_PATH_BS}/conf/.bash_aliases
+_keepmv ${file}
+_evalr ln -s ${file_from} ${file}
+
+_echot "------------------  .bash_env"
+file=/root/.bash_env
+file_from=${_PATH_BS}/conf/.bash_env
+_keepmv ${file}
+_evalr ln -s ${file_from} ${file}
+
+_echot "------------------ .bashrc"
+file="/root/.bashrc"
+_keepcp ${file}
+
+# force color
+sudo sed -i '/^#force_color_prompt=/ s|#||' ${file}
+# PS1
+color='\\[\\033[01;31m\\]' # '\\[\\033[01;34m\\]'
+sudo sed -i 's|^\(\s*PS1=\).*00m.*$|\1"\${debian_chroot:+(\$debian_chroot)}'${color}'\\h\\[\\033[00m\\] \\W'${color}'#\\[\\033[00m\\] "|' ${file}
+sudo sed -i "/^\s*PS1=.*00m/ s|\"|'|g" ${file}
+
+sudo grep -q ".bash_env" ${file} || sudo sh -c "echo '
+# global variables
+[ -f /root/.bash_env ] && . /root/.bash_env
+
+# functions
+[ -f /root/.bash_functions ] && . /root/.bash_functions
+' >> ${file}"
+# aliases
+sudo grep -q "/.bash_aliases" ${file} || sudo sh -c "echo '
+# bash_aliases
+[ -f /root/.bash_aliases ] && . /root/.bash_aliases
+'  >> ${file}"
+
+_echot "------------------  .vimrc"
+file=/root/.vimrc
+file_from=${_PATH_BS}/conf/.vimrc
+_keepmv ${file}
+_evalr ln -s ${file_from} ${file}
+
+########################  END
+
+_echoT "===================== ${_PART} end"
+_partadd "${_PART}" "${_FILE_DONE}"

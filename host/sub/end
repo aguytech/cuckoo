@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# write by Aguy
+
+_echoT "\n==========================================  ${_PART}"
+
+########################  MAIN
+
+_echot "------------------ languages"
+_echoA "Select 'Region & language' & 'Manage installed languages' to update required files & close windows,"
+_askno "Valid to continue"
+sudo gnome-control-center
+
+_echot "------------------ upgrade"
+_eval upgrade
+
+########################  END
+
+_echoT "===================== ${_PART} end"
+_partadd "${_PART}" "${_FILE_DONE}"
+
+########################  RESTART
+
+_echoA "Restart your computer to append configuration"
+_ask "Valid to reboot"
+sudo reboot

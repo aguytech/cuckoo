@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# write by Aguy
+
+_echoT "\n==========================================  ${_PART}"
+
+########################  REPOSITORIES
+
+_echot "------------------ apt repository"
+file=/etc/apt/sources.list
+_keepcp ${file}
+
+sudo add-apt-repository -yn ppa:mozillateam/ppa # mozilla
+sudo add-apt-repository -yn ppa:tomtomtom/gmusicbrowser # gmusicbrowser
+sudo apt-add-repository -yn ppa:vincent-vandevyvre/vvv # qarte
+sudo apt-add-repository -yn ppa:kdenlive/kdenlive-stable
+sudo add-apt-repository -yn ppa:alex-p/aegisub # aegisub
+sudo apt-add-repository -yn ppa:inkscape.dev/stable # inkscape
+#sudo apt-add-repository -yn ppa:yannubuntu/boot-repair # boot-repair
+#sudo apt-add-repository -yn ppa:nilarimogard/webupd8 # youtube-dl, pulseaudio-equalizer & more
+#sudo apt-add-repository -yn ppa:webupd8team/y-ppa-manager # y-ppa-manager
+#sudo apt-add-repository -yn ppa:mc3man/mpv-tests # mpv
+#sudo apt-add-repository -yn ppa:otto-kesselgulasch/gimp # gimp gmic
+
+#_echot "------------------ firefox"
+#echo '                                        
+#Package: *
+#Pin: release o=LP-PPA-mozillateam
+#Pin-Priority: 1001
+#' | sudo tee /etc/apt/preferences.d/mozilla-firefox
+
+sudo apt update
+
+########################  MAIN
+
+_echot "------------------  system"
+packages="curl exfat-utils gdebi gnupg2 gparted hfsprogs htop kpartx most pv testdisk tmux tree"
+packages+=" p7zip-full p7zip-rar zip unzip rar unrar"
+# oracle-java7-installer ntfsprogs grsync gtk2-engines-pixbuf libnss-myhostname atop fslint dstat icedtea-8-plugin
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------------------ tools"
+packages="baobab dconf-editor font-manager gnome-sushi meld qt5ct"
+packages+="  gnome-system-monitor gnome-system-tools gnome-tweak-tool"
+# gnome-activity-journal boot-repair backintime-gnome y-ppa-manager numlockx multisystem
+packages+=" easytag-nautilus nautilus-image-converter nautilus-script-audio-convert nautilus-sendto"
+
+# nautilus-columns nautilus-image-manipulator filemanager-actions nautilus-emblems
+packages+=" gedit-plugins gedit-source-code-browser-plugin stopwatch"
+# gedit-developer-plugins
+# uget-chrome-wrapper nautilus-dropbox nautilus-filename-repairer nautilus-image-converter nautilus-terminal
+# compiz-fusion-plugins-extra compizconfig-settings-manager exfat-utils exfat-fuse freefilesync qshutdown solaar unetbootin
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------------------ libreoffice"
+packages="libreoffice"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------------------ graphic"
+packages="inkscape gimp"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------------------ audio"
+packages="audacity easytag gmusicbrowser pulseaudio-equalizer soundconverter sound-juicer"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------------------ video"
+packages="cheese qarte simplescreenrecorder "
+packages+=" aegisub gnome-subtitles gnome-video-effects-extra handbrake mkvtoolnix-gui mpv totem totem-plugins"
+packages+=" gstreamer1.0-plugins-bad libavcodec-extra libdvdnav4 libdvd-pkg libdvdread8 ubuntu-restricted-extras"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+########################  END
+
+_echoT "===================== ${_PART} end"
+_partadd "${_PART}" "${_FILE_DONE}"

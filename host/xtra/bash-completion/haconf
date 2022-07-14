@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Bash completion function for script haconf command
+
+_haconf()
+{
+    local path_enabled="/etc/haproxy/conf-enabled"
+    local path_available="/etc/haproxy/conf-available"
+
+    __disabled() {
+        local confs conf notused
+        confs="$(ls "${path_available}")"
+        for conf in ${confs}; do
+            ! [ -h "${path_enabled}/${conf}" ] && notused="${notused} ${conf}"
+        done
+        echo ${notused}
+    }
+
+    __enabled() {
+        ls ${path_enabled}
+    }
+
+    COMPREPLY=()
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    # primary commans
+    local opts='check clear enable disable list reload'
+
+    # level 1 for commands
+    if [ $COMP_CWORD -eq 1 ]; then
+        COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+        return 0
+    # level 2 for arguments
+    else
+        case $prev in
+            enable)
+                COMPREPLY=( $(compgen -W "$(__disabled)" -- "${cur}" ) )
+                return 0
+                ;;
+            disable)
+                COMPREPLY=( $(compgen -W "$(__enabled)" -- "${cur}" ) )
+                return 0
+                ;;
+        esac
+    fi
+
+}
+complete -F _haconf haconf

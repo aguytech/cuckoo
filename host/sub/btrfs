@@ -1,0 +1,299 @@
+#!/bin/bash
+#
+# write by Aguy
+
+_echoT "\n==========================================  ${_PART}"
+
+########################  DATA
+
+_echot "------------------ Devices"
+sudo lsblk -e 11,7 -o name,size,mountpoint
+echo
+sudo blkid|grep -v /loop
+echo
+
+devices=$( sudo blkid -o device|grep -v '/loop\|/sr' )
+
+if [ -z ${_UEFI+x} ]; then
+	menutmp=$( sudo blkid|grep -i 'TYPE="vfat"'|cut -d':' -f1|sort|xargs )
+	_menu "Select a device for UEFI or none" none ${menutmp}
+	_UEFI=${_ANSWER/none/}
+	_confset _UEFI "${_UEFI}"
+fi
+[ "${_UEFI}" ] && devices=$( sudo blkid -o device|grep -v '/loop\|/sr'|grep -v "${_UEFI}" )
+
+if [ -z ${_DEVICE_SYS+x} ]; then
+	_menu "Select a device for SYSTEM" ${devices}
+	_DEVICE_SYS=${_ANSWER}
+	_confset _DEVICE_SYS "${_DEVICE_SYS}"
+fi
+[ "${_DEVICE_SYS}" ] && devices=$( echo "${devices}"|grep -v "${_DEVICE_SYS}" )
+
+if [ -z ${_DEVICE_EXT+x} ]; then
+	_menu "Select a dedicated device for /ext or none" none ${devices}
+	_DEVICE_EXT=${_ANSWER/none/}
+	_confset _DEVICE_EXT "${_DEVICE_EXT}"
+fi
+
+if [ -z ${_DEVICE_GRUB+x} ]; then
+	menutmp=$( lsblk|grep '^[a-z][a-z][a-z]'|cut -d' ' -f1|sed 's|^|/dev/|'|xargs )
+	menutmp+=" $( sudo blkid -o device|grep -v '/loop\|/sr'|xargs )"
+	_menu "Select a device for GRUB ${menutmp}" ${menutmp}
+	_DEVICE_GRUB=${_ANSWER}
+	_confset _DEVICE_GRUB "${_DEVICE_GRUB}"
+fi
+
+if [ -z ${_SSD_SYS+x} ]; then
+	_askyn "The SYSTEM device '${_DEVICE_SYS}' are they a SSD disk ?"
+	_SSD_SYS=${_ANSWER/n/}
+fi
+_confset _SSD_SYS "${_SSD_SYS}"
+
+if [ -z ${_SYSNAME+x} ]; then
+	anstmp=$( sed -n 's|^DISTRIB_CODENAME=\(.*\)$|\1|p' /etc/lsb-release|sed 's/.*/\L&/g' )
+	_askno "Give a NAME for system btrfs volume: ${_DEVICE_SYS} (${anstmp})"
+	_SYSNAME=${_ANSWER:-${anstmp}}
+	_confset _SYSNAME "${_SYSNAME}"
+fi
+
+if [ -z ${_MEM+x} ]; then
+	anstmp=2G
+	_askno "Give the TMPFS memory size for /tmp or 0 (${anstmp})"
+	_MEM=${_ANSWER:-${anstmp}}
+	_MEM=${_MEM%%0*}
+fi
+_confset _MEM "${_MEM}"
+
+if [ -z ${_USERNAME+x} ]; then
+	anstmp="nikita"
+	_askno "Give the user name (${anstmp})"
+	_USERNAME=${_ANSWER:-${anstmp}}
+	_confset _USERNAME "${_USERNAME}"
+fi
+
+########################  MAIN
+
+_echo "--------------------------"
+cat "${_FILE_CONF}"
+_echo "--------------------------"
+_askyn "Confirm installation" && [ "${_ANSWER}" == n ] && _exit 1
+
+########################  DEVICES
+
+_echot "------------------ btrfs volumes && dirs"
+cd /
+if grep -q "^${_DEVICE_SYS}" /proc/mounts; then
+	path_sys=$( grep "^${_DEVICE_SYS}" /proc/mounts | cut -d' ' -f2 )
+	sudo umount ${path_sys} || _exite "Unable to unmount ${path_sys}"
+fi
+path_sys=/mnt_sys
+[ -d "${path_sys}" ] || sudo mkdir "${path_sys}"
+sudo mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
+cd ${path_sys}
+sudo btrfs subvolume list .
+
+_echot "------------------ user"
+user_uid=$( grep ^${_USERNAME} '@/etc/passwd' | cut -d: -f3 )
+user_gid=$( grep ^${_USERNAME} '@/etc/group' | cut -d: -f3 )
+
+_echot "------------------ system"
+[ -d "${_SYSNAME}" ] && ! [ -d "${_SYSNAME}.keep" ] && sudo mv "${_SYSNAME}" "${_SYSNAME}.keep"
+[ -d "${_SYSNAME}" ] && sudo btrfs subvolume delete "${_SYSNAME}"
+sudo mv '@' "${_SYSNAME}" || _exite "Unable to move @ to ${_SYSNAME}"
+
+_echot "------------------ home"
+! [ -d home ] && sudo btrfs subvolume create home
+# backup & create volume for user-$user
+[ -d "user-${_SYSNAME}" ] && ! [ -d user-${_SYSNAME}.keep ] && sudo mv user-${_SYSNAME} user-${_SYSNAME}.keep
+[ -d "user-${_SYSNAME}" ] && sudo btrfs subvolume delete "user-${_SYSNAME}"
+sudo btrfs subvolume create user-${_SYSNAME}
+# move data user to user-$user
+sudo sh -c "mv @home/${_USERNAME}/* user-${_SYSNAME}/ 2>/dev/null"
+sudo sh -c "mv @home/${_USERNAME}/.??* user-${_SYSNAME}/ 2>/dev/null"
+# create path for binding user-${user}
+[ -d "home/${_USERNAME}" ] || sudo mkdir home/${_USERNAME}
+sudo chown ${user_uid}:${user_gid} -R home/${_USERNAME} user-${_SYSNAME}
+
+_echot "------------------ save"
+[ -d save ] || sudo btrfs subvolume create save
+
+_echot "------------------ ext"
+if [ "${_DEVICE_EXT}" ]; then
+	device_ext=${_DEVICE_EXT}
+	path_ext=
+else
+	device_ext=${_DEVICE_SYS}
+	path_ext=/ext
+	sudo btrfs subvolume create ext
+fi
+
+_echot "------------------ bs"
+[ -d home/shared/repo/bs ] || sudo cp -r ${_PATH_BASE}/bs ${_SYSNAME}${_PATH_BS}
+
+_echot "------------------ paths create"
+paths="${_SYSNAME}/save ${_SYSNAME}/ext ${_SYSNAME}${_PATH_BS}"
+for path in ${paths}; do
+	_keepmv "${path}"
+	[ -d "${path}" ] || sudo mkdir "${path}"
+	sudo chown ${USER}:${USER} ${path}
+done
+
+_echot "------------------ btrfs delete"
+for sub in @home @cache @log; do
+	[ "$( sudo btrfs subvolume show ${sub} 2>/dev/null )" ] && sudo btrfs subvolume delete ${sub}
+done
+
+_echot "------------------ path delete"
+paths="create ubiquity-apt-clone var"
+for path in ${paths}; do
+	[ -e "${path}" ] && sudo rm -fR "${path}"
+done
+
+_echot "------------------ btrfs subvolume list ${PWD}"
+sudo btrfs subvolume list .
+
+########################  FSTAB
+
+_echot "------------------ device sys"
+uuidsys=$( sudo blkid |grep ${_DEVICE_SYS} |sed 's|.* UUID="\([^"]\+\)" .*|\1|' )
+if [ -z "${uuidsys}" ]; then
+	_ask "Please give the UUID for sys"
+	uuidsys=${_ANSWER}
+	_echO "uuidsys=${uuidsys}"
+fi
+
+if [ "${_DEVICE_EXT}" ]; then
+	_echot "------------------ device ext"
+	uuidext=$( sudo blkid |grep ${_DEVICE_EXT} |sed 's|.* UUID="\([^"]\+\)" .*|\1|' )
+	if [ -z "${uuidext}" ]; then
+		_ask "Please give the UUID for ext"
+		uuidext=${_ANSWER}
+		_echO "uuidext=${uuidext}"
+	fi
+fi
+
+_echot "------------------ /etc/fstab"
+file=${_SYSNAME}/etc/fstab
+_keepcp ${file}
+sudo sed -i "\|/var/cache |d" ${file}
+sudo sed -i "\|/var/log |d" ${file}
+sudo sed -i '/^UUID=.* btrfs .*/ s|^|#|' ${file}
+
+sudo sh -c "echo '
+# btrfs sys
+UUID=${uuidsys}   /                 btrfs   defaults,noatime,space_cache=v2,autodefrag,compress=zstd,subvol=/${_SYSNAME}      0    1
+UUID=${uuidsys}   /home             btrfs   defaults,noatime,space_cache=v2,autodefrag,compress=zstd,subvol=/home       0    2
+UUID=${uuidsys}   /home/${_USERNAME}      btrfs   defaults,noatime,space_cache=v2,autodefrag,compress=zstd,subvol=/user-${_SYSNAME} 0    2
+UUID=${uuidsys}   /save             btrfs   defaults,noatime,space_cache=v2,autodefrag,compress=zstd,subvol=/save       0    2' >> ${file}"
+
+# ext
+[ "${_DEVICE_EXT}" ] || sudo sh -c "echo 'UUID=${uuidsys}   /ext              btrfs   defaults,noatime,space_cache=v2,autodefrag,compress=zstd,subvol=/ext        0    2' >> ${file}"
+
+#sys
+sudo sh -c "echo '
+UUID=${uuidsys}   /btrfs/sys        btrfs   noauto,defaults,noatime,space_cache=v2,autodefrag,compress=zstd            0    2' >> ${file}"
+
+# ext
+[ "${_DEVICE_EXT}" ] && sudo sh -c "echo '# btrfs ext
+UUID=${uuidext}      /ext              btrfs   defaults,noatime,space_cache=v2,autodefrag,compress=zstd           0    2
+UUID=${uuidext}      /btrfs/ext        btrfs   noauto,defaults,noatime,space_cache=v2,autodefrag,compress=zstd               0    2' >> ${file}"
+
+# tmpfs
+if [ "${_MEM}" ]; then
+	if grep -q '^tmp.*\/tmp' /etc/fstab; then
+		sudo sed -i "/tmpfs/ s|mode=1777|mode=1777,size=${_MEM}|" ${file}
+	else
+		sudo sh -c "echo '
+tmpfs                                       /tmp              tmpfs   defaults,noatime,mode=1777,size=${_MEM}     0 0' >> ${file}"
+	fi
+fi
+
+# ssd
+[ "${_SSD_SYS}" ] && sudo sed -i "/^UUID=${uuidsys}.*\sbtrfs\s/ s|noatime,|noatime,ssd,|" ${file}
+
+# bs
+[ -d "home/shared/repo/bs" ] && sudo sh -c "echo '
+# bind
+/home/shared/repo/bs   ${_PATH_BS}    none    bind                    0    0' >> ${file}"
+
+_echot "------------------ ${file}"
+echo
+cat ${file}
+echo
+_echoA "Check above file: /etc/fstab"
+_askno "Confirm to continue"
+[ "${_ANSWER}" = n ] && exit 1
+
+_echot "------------------ grub default"
+file=${_SYSNAME}/etc/default/grub
+_keepcp "${file}"
+grep -q '^GRUB_CMDLINE_LINUX=.*biosdevname' ${file} \
+	|| sudo sed -i '/^GRUB_CMDLINE_LINUX=/ s|"$| biosdevname=0"|' ${file}
+
+_echot "------------------ umount ${path_sys}"
+cd
+sudo umount ${path_sys}
+
+############  GRUB
+
+_echot "------------------ grub mount devices"
+cd /
+sudo mount -o subvol="${_SYSNAME}" "${_DEVICE_SYS}" ${path_sys} \
+	|| _exite "Unable to mount subvol=${_SYSNAME} of ${_DEVICE_SYS} in ${path_sys}"
+for i in dev dev/pts sys proc run; do
+	sudo mount --bind /$i ${path_sys}/$i
+done
+# uefi
+[ "${_UEFI}" ] && sudo mount "${_UEFI}" ${path_sys}/boot/efi
+
+_echot "------------------ grub install"
+_echoA "After you are 'chrooted' please enter this line :"
+_echo "grub-install --recheck ${_DEVICE_GRUB}"
+_echo "update-grub"
+_echo "exit"
+
+_echot "------------------ grub chroot"
+sudo chroot ${path_sys}
+
+_echot "------------------ grub umount devices"
+# uefi
+[ "$_UEFI" ] && sudo umount ${path_sys}/boot/efi
+for i in run proc sys dev/pts dev; do
+	sudo umount ${path_sys}/$i
+done
+sudo umount ${path_sys}
+
+########################  END
+
+_echoT "===================== ${_PART} end"
+_partadd "${_PART}" "${_FILE_DONE}"
+
+########################  EXPORT
+
+_echot "------------------ mount ${_DEVICE_SYS}"
+sudo mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
+
+_echot "------------------ copy desktop-install config"
+path="${path_sys}/user-${_SYSNAME}/${_PATH_CONF#/home/*/}"
+_keepmv ${path}
+[ -d "${path}" ] || sudo mkdir -p ${path}
+sudo cp -r ${_PATH_CONF}/* ${path}/
+sudo chown ${user_uid}:${user_gid} -R ${path_sys}/user-${_SYSNAME}
+
+_echot "------------------ copy desktop-install log"
+path="${path_sys}/${_SYSNAME}/var/log/desktop-install"
+_keepmv ${path}
+[ -d "${path}" ] || sudo mkdir -p ${path}
+sudo cp -a /var/log/desktop-install/* ${path}/
+sudo chown ${user_uid}:0 -R ${path}
+sudo chmod 664 ${path}/*
+
+_echot "------------------ umount ${_DEVICE_SYS}"
+sudo umount ${path_sys}
+
+_echot "------------------ reboot ${_DEVICE_SYS}"
+_echoA "You have to start the global installation script after the reboot"
+_echoa "The computer now will reboot"
+_askno "Valid to continue"
+reboot
+exit
