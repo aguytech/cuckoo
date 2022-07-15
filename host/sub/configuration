@@ -115,67 +115,6 @@ done
 _echot "------- language-specs conf"
 _evalr cp ${_PATH_BASE}/conf/gtk/*.lang /usr/share/gtksourceview-3.0/language-specs/
 
-_echot "------- aegisub"
-path=${HOME}/.aegisub/
-[ -d "${path}" ] || mkdir -p ${path}
-_eval cp ${_PATH_BASE}/conf/aegisub-config.json ${path}
-
-#_echot "------- dvd"
-#sudo dpkg-reconfigure libdvd-pkg
-
-_echot "------- gedit settings"
-#dconf write /org/nemo/extensions/nemo-terminal/default-visible false
-#gsettings set org.gnome.gedit.preferences.ui max-recents 30
-gsettings set org.gnome.gedit.preferences.ui side-panel-visible true
-gsettings set org.gnome.gedit.preferences.editor display-line-numbers true
-gsettings set org.gnome.gedit.preferences.editor tabs-size 4
-dconf write /org/gnome/gedit/plugins/sourcecodebrowser/show-line-numbers true
-dconf write /org/gnome/gedit/plugins/filebrowser/enable-remote true
-
-# plugins
-path_plug=${HOME}/.local/share/gedit/plugins
-[ -d "${path_plug}" ] || mkdir -p "${path_plug}"
-
-_echot "------- gedit / restore-tabs"
-path=restore-tabs
-cd ${path_plug}
-_keepmvts ${path}
-curl -o master.zip https://codeload.github.com/raelgc/gedit-restore-tabs/zip/master
-unzip master.zip
-rm master.zip
-mv gedit-restore-tabs-master ${path}
-rm ${path}/.gitignore
-sudo cp ${path}/org.gnome.gedit.plugins.restoretabs.gschema.xml /usr/share/glib-2.0/schemas/
-sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
-
-_echot "------- gedit / duplicate-line"
-path=duplicate-line
-cd ${path_plug}
-_keepmvts ${path}
-curl -o master.zip https://codeload.github.com/hardpixel/gedit-duplicate-line/zip/master
-unzip master.zip
-rm master.zip
-mv gedit-duplicate-line-master ${path}
-sed -i 's|^\(\s*modifiers = event.state.*\)|#\1|' ${path}/duplicate_line.py
-sed -i 's|^\(\s*\)\(if modifiers ==.*\)|#\1\2\n\1if event.state \& Gdk.ModifierType.CONTROL_MASK and event.state \& Gdk.ModifierType.SHIFT_MASK:|' ${path}/duplicate_line.py
-#if event.state & Gdk.ModifierType.CONTROL_MASK and event.state & Gdk.ModifierType.SHIFT_MASK:
-
-_echot "------- gedit / gedit-markdown"
-path=markdown_preview
-cd ${path_plug}
-_keepmvts ${path}
-curl -o master.zip https://codeload.github.com/maoschanz/gedit-plugin-markdown_preview/zip/master
-unzip master.zip
-rm master.zip
-mv gedit-plugin-markdown_preview-master ${path}
-
 _echot "------- user icons"
 path=${HOME}/.local/share/icons
 cp ${_PATH_BASE}/icons/* ${path}/
-
-_echot "------- firefox tweaks"
-path=${HOME}/.mozilla/firefox/${USER}
-if [ -d "${path}" ]; then
-	ln -sv "${_PATH_BASE}/conf/user.js" ${path}
-	chown ${USER}:${USER} ${path}
-fi
