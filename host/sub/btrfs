@@ -2,11 +2,9 @@
 #
 # write by Aguy
 
-_echoT "\n==========================================  ${_PART}"
-
 ########################  DATA
 
-_echot "------------------ Devices"
+_echot "------- Devices"
 sudo lsblk -e 11,7 -o name,size,mountpoint
 echo
 sudo blkid|grep -v /loop
@@ -36,9 +34,9 @@ if [ -z ${_DEVICE_EXT+x} ]; then
 fi
 
 if [ -z ${_DEVICE_GRUB+x} ]; then
-	menutmp=$( lsblk|grep '^[a-z][a-z][a-z]'|cut -d' ' -f1|sed 's|^|/dev/|'|xargs )
+	menutmp=$( lsblk -e 11,7|grep '^[a-z][a-z][a-z]'|cut -d' ' -f1|sed 's|^|/dev/|'|xargs )
 	menutmp+=" $( sudo blkid -o device|grep -v '/loop\|/sr'|xargs )"
-	_menu "Select a device for GRUB ${menutmp}" ${menutmp}
+	_menu "Select a device for GRUB" ${menutmp}
 	_DEVICE_GRUB=${_ANSWER}
 	_confset _DEVICE_GRUB "${_DEVICE_GRUB}"
 fi
@@ -80,81 +78,90 @@ _askyn "Confirm installation" && [ "${_ANSWER}" == n ] && _exit 1
 
 ########################  DEVICES
 
-_echot "------------------ btrfs volumes && dirs"
+_echot "------- btrfs volumes && dirs"
 cd /
 if grep -q "^${_DEVICE_SYS}" /proc/mounts; then
 	path_sys=$( grep "^${_DEVICE_SYS}" /proc/mounts | cut -d' ' -f2 )
-	sudo umount ${path_sys} || _exite "Unable to unmount ${path_sys}"
+	_evalr umount ${path_sys} || _exite "Unable to unmount ${path_sys}"
 fi
 path_sys=/mnt_sys
-[ -d "${path_sys}" ] || sudo mkdir "${path_sys}"
-sudo mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
+[ -d "${path_sys}" ] || _evalr mkdir "${path_sys}"
+_evalr mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
 cd ${path_sys}
-sudo btrfs subvolume list .
+_evalr btrfs subvolume list .
 
-_echot "------------------ user"
+_echot "------- user"
 user_uid=$( grep ^${_USERNAME} '@/etc/passwd' | cut -d: -f3 )
 user_gid=$( grep ^${_USERNAME} '@/etc/group' | cut -d: -f3 )
 
-_echot "------------------ system"
-[ -d "${_SYSNAME}" ] && ! [ -d "${_SYSNAME}.keep" ] && sudo mv "${_SYSNAME}" "${_SYSNAME}.keep"
-[ -d "${_SYSNAME}" ] && sudo btrfs subvolume delete "${_SYSNAME}"
-sudo mv '@' "${_SYSNAME}" || _exite "Unable to move @ to ${_SYSNAME}"
+_echot "------- system"
+[ -d "${_SYSNAME}" ] && ! [ -d "${_SYSNAME}.keep" ] && _evalr mv "${_SYSNAME}" "${_SYSNAME}.keep"
+[ -d "${_SYSNAME}" ] && _evalr btrfs subvolume delete "${_SYSNAME}"
+_evalr mv '@' "${_SYSNAME}" || _exite "Unable to move @ to ${_SYSNAME}"
 
-_echot "------------------ home"
-! [ -d home ] && sudo btrfs subvolume create home
+_echot "------- home"
+! [ -d home ] && _evalr btrfs subvolume create home
 # backup & create volume for user-$user
-[ -d "user-${_SYSNAME}" ] && ! [ -d user-${_SYSNAME}.keep ] && sudo mv user-${_SYSNAME} user-${_SYSNAME}.keep
-[ -d "user-${_SYSNAME}" ] && sudo btrfs subvolume delete "user-${_SYSNAME}"
-sudo btrfs subvolume create user-${_SYSNAME}
+[ -d "user-${_SYSNAME}" ] && ! [ -d user-${_SYSNAME}.keep ] && _evalr mv user-${_SYSNAME} user-${_SYSNAME}.keep
+[ -d "user-${_SYSNAME}" ] && _evalr btrfs subvolume delete "user-${_SYSNAME}"
+_evalr btrfs subvolume create user-${_SYSNAME}
 # move data user to user-$user
 sudo sh -c "mv @home/${_USERNAME}/* user-${_SYSNAME}/ 2>/dev/null"
 sudo sh -c "mv @home/${_USERNAME}/.??* user-${_SYSNAME}/ 2>/dev/null"
 # create path for binding user-${user}
-[ -d "home/${_USERNAME}" ] || sudo mkdir home/${_USERNAME}
-sudo chown ${user_uid}:${user_gid} -R home/${_USERNAME} user-${_SYSNAME}
+[ -d "home/${_USERNAME}" ] || _evalr mkdir home/${_USERNAME}
+_evalr chown ${user_uid}:${user_gid} -R home/${_USERNAME} user-${_SYSNAME}
 
-_echot "------------------ save"
-[ -d save ] || sudo btrfs subvolume create save
+_echot "------- btrfs/sys"
+path=btrfs/sys
+[ -d "${path}"] || _evalr mkdir -p ${path}
 
-_echot "------------------ ext"
+if [ "${_DEVICE_EXT}" ]; then
+	_echot "------- btrfs/ext"
+	path=btrfs/ext
+	[ -d "${path}"] || _evalr mkdir -p ${path}
+fi
+
+_echot "------- save"
+[ -d save ] || _evalr btrfs subvolume create save
+
+_echot "------- ext"
 if [ "${_DEVICE_EXT}" ]; then
 	device_ext=${_DEVICE_EXT}
 	path_ext=
 else
 	device_ext=${_DEVICE_SYS}
 	path_ext=/ext
-	sudo btrfs subvolume create ext
+	_evalr btrfs subvolume create ext
 fi
 
-_echot "------------------ bs"
-[ -d home/shared/repo/bs ] || sudo cp -r ${_PATH_BASE}/bs ${_SYSNAME}${_PATH_BS}
+_echot "------- bs"
+[ -d home/shared/repo/bs ] || _evalr cp -r ${_PATH_BASE}/bs ${_SYSNAME}${_PATH_BS}
 
-_echot "------------------ paths create"
+_echot "------- paths create"
 paths="${_SYSNAME}/save ${_SYSNAME}/ext ${_SYSNAME}${_PATH_BS}"
 for path in ${paths}; do
-	_keepmv "${path}"
-	[ -d "${path}" ] || sudo mkdir "${path}"
-	sudo chown ${USER}:${USER} ${path}
+	[ -d "${path}" ] || _evalr mkdir "${path}"
+	_evalr chown ${USER}:${USER} ${path}
 done
 
-_echot "------------------ btrfs delete"
+_echot "------- btrfs delete"
 for sub in @home @cache @log; do
-	[ "$( sudo btrfs subvolume show ${sub} 2>/dev/null )" ] && sudo btrfs subvolume delete ${sub}
+	[ "$( sudo btrfs subvolume show ${sub} 2>/dev/null )" ] && _evalr btrfs subvolume delete ${sub}
 done
 
-_echot "------------------ path delete"
+_echot "------- path delete"
 paths="create ubiquity-apt-clone var"
 for path in ${paths}; do
-	[ -e "${path}" ] && sudo rm -fR "${path}"
+	[ -e "${path}" ] && _evalr rm -fR "${path}"
 done
 
-_echot "------------------ btrfs subvolume list ${PWD}"
-sudo btrfs subvolume list .
+_echot "------- btrfs subvolume list ${PWD}"
+_evalr btrfs subvolume list .
 
 ########################  FSTAB
 
-_echot "------------------ device sys"
+_echot "------- device sys"
 uuidsys=$( sudo blkid |grep ${_DEVICE_SYS} |sed 's|.* UUID="\([^"]\+\)" .*|\1|' )
 if [ -z "${uuidsys}" ]; then
 	_ask "Please give the UUID for sys"
@@ -163,7 +170,7 @@ if [ -z "${uuidsys}" ]; then
 fi
 
 if [ "${_DEVICE_EXT}" ]; then
-	_echot "------------------ device ext"
+	_echot "------- device ext"
 	uuidext=$( sudo blkid |grep ${_DEVICE_EXT} |sed 's|.* UUID="\([^"]\+\)" .*|\1|' )
 	if [ -z "${uuidext}" ]; then
 		_ask "Please give the UUID for ext"
@@ -172,7 +179,7 @@ if [ "${_DEVICE_EXT}" ]; then
 	fi
 fi
 
-_echot "------------------ /etc/fstab"
+_echot "------- /etc/fstab"
 file=${_SYSNAME}/etc/fstab
 _keepcp ${file}
 sudo sed -i "\|/var/cache |d" ${file}
@@ -216,7 +223,7 @@ fi
 # bind
 /home/shared/repo/bs   ${_PATH_BS}    none    bind                    0    0' >> ${file}"
 
-_echot "------------------ ${file}"
+_echot "------- ${file}"
 echo
 cat ${file}
 echo
@@ -224,76 +231,75 @@ _echoA "Check above file: /etc/fstab"
 _askno "Confirm to continue"
 [ "${_ANSWER}" = n ] && exit 1
 
-_echot "------------------ grub default"
+_echot "------- grub default"
 file=${_SYSNAME}/etc/default/grub
 _keepcp "${file}"
 grep -q '^GRUB_CMDLINE_LINUX=.*biosdevname' ${file} \
 	|| sudo sed -i '/^GRUB_CMDLINE_LINUX=/ s|"$| biosdevname=0"|' ${file}
 
-_echot "------------------ umount ${path_sys}"
+_echot "------- umount ${path_sys}"
 cd
-sudo umount ${path_sys}
+_evalr umount ${path_sys}
 
 ############  GRUB
 
-_echot "------------------ grub mount devices"
+_echot "------- grub mount devices"
 cd /
-sudo mount -o subvol="${_SYSNAME}" "${_DEVICE_SYS}" ${path_sys} \
+_evalr mount -o subvol="${_SYSNAME}" "${_DEVICE_SYS}" ${path_sys} \
 	|| _exite "Unable to mount subvol=${_SYSNAME} of ${_DEVICE_SYS} in ${path_sys}"
 for i in dev dev/pts sys proc run; do
-	sudo mount --bind /$i ${path_sys}/$i
+	_evalr mount --bind /$i ${path_sys}/$i
 done
 # uefi
-[ "${_UEFI}" ] && sudo mount "${_UEFI}" ${path_sys}/boot/efi
+[ "${_UEFI}" ] && _evalr mount "${_UEFI}" ${path_sys}/boot/efi
 
-_echot "------------------ grub install"
+_echot "------- grub install"
 _echoA "After you are 'chrooted' please enter this line :"
 _echo "grub-install --recheck ${_DEVICE_GRUB}"
 _echo "update-grub"
 _echo "exit"
 
-_echot "------------------ grub chroot"
-sudo chroot ${path_sys}
+_echot "------- grub chroot"
+_evalr chroot ${path_sys}
 
-_echot "------------------ grub umount devices"
+_echot "------- grub umount devices"
 # uefi
-[ "$_UEFI" ] && sudo umount ${path_sys}/boot/efi
+[ "$_UEFI" ] && _evalr umount ${path_sys}/boot/efi
 for i in run proc sys dev/pts dev; do
-	sudo umount ${path_sys}/$i
+	_evalr umount ${path_sys}/$i
 done
-sudo umount ${path_sys}
+_evalr umount ${path_sys}
 
 ########################  END
 
-_echoT "===================== ${_PART} end"
 _partadd "${_PART}" "${_FILE_DONE}"
 
 ########################  EXPORT
 
-_echot "------------------ mount ${_DEVICE_SYS}"
-sudo mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
+_echot "------- mount ${_DEVICE_SYS}"
+_evalr mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
 
-_echot "------------------ copy desktop-install config"
+_echot "------- copy desktop-install config"
 path="${path_sys}/user-${_SYSNAME}/${_PATH_CONF#/home/*/}"
 _keepmv ${path}
-[ -d "${path}" ] || sudo mkdir -p ${path}
-sudo cp -r ${_PATH_CONF}/* ${path}/
-sudo chown ${user_uid}:${user_gid} -R ${path_sys}/user-${_SYSNAME}
+[ -d "${path}" ] || _evalr mkdir -p ${path}
+_evalr cp -r ${_PATH_CONF}/* ${path}/
+_evalr chown ${user_uid}:${user_gid} -R ${path_sys}/user-${_SYSNAME}
 
-_echot "------------------ copy desktop-install log"
+_echot "------- copy desktop-install log"
 path="${path_sys}/${_SYSNAME}/var/log/desktop-install"
 _keepmv ${path}
-[ -d "${path}" ] || sudo mkdir -p ${path}
-sudo cp -a /var/log/desktop-install/* ${path}/
-sudo chown ${user_uid}:0 -R ${path}
-sudo chmod 664 ${path}/*
+[ -d "${path}" ] || _evalr mkdir -p ${path}
+_evalr cp -a /var/log/desktop-install/* ${path}/
+_evalr chown ${user_uid}:0 -R ${path}
+_evalr chmod 664 ${path}/*
 
-_echot "------------------ umount ${_DEVICE_SYS}"
-sudo umount ${path_sys}
+_echot "------- umount ${_DEVICE_SYS}"
+_evalr umount ${path_sys}
 
-_echot "------------------ reboot ${_DEVICE_SYS}"
-_echoA "You have to start the global installation script after the reboot"
+_echot "------- reboot ${_DEVICE_SYS}"
+_echoA "You have to restart the global installation script after the reboot"
 _echoa "The computer now will reboot"
-_askno "Valid to continue"
+_askno "Validate to continue"
 reboot
 exit

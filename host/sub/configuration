@@ -2,13 +2,11 @@
 #
 # write by Aguy
 
-_echoT "\n==========================================  ${_PART}"
-
 grep -q "^# ${_PART}" "${_FILE_CONF}" || echo -e "# ${_PART}" >> "${_FILE_CONF}"
 
 ########################  MAIN
 
-_echot "------------------ grub"
+_echot "------- grub"
 file=/etc/default/grub
 _keepcp ${file}
 sudo sed -i "s|^.\?\(GRUB_TIMEOUT_STYLE\)=.*|\1=menu|" ${file}
@@ -20,30 +18,30 @@ _keepcp ${file}
 sudo sed -i "s|30|2|g" ${file}
 _evalr update-grub
 
-_echot "------------------ reduce swapiness"
+_echot "------- reduce swapiness"
 sudo swapoff -av
 sudo sh -c 'echo vm.swappiness=40 > /etc/sysctl.d/99-swappiness.conf' # limit swap
 sudo swapon -v
 
-_echot "------------------  profile"
+_echot "------- profile"
 sudo sh -c "echo '# PATH
 export PATH=\${PATH}:${_PATH_BS}
 # QT
 export QT_QPA_PLATFORMTHEME=qt5ct' > /etc/profile.d/desktop.sh"
 
-_echot "------------------  bash-completion"
+_echot "------- bash-completion"
 _evalr "cp -a ${_PATH_BASE}/xtra/bash-completion/* /usr/share/bash-completion/completions/"
 
-_echot "------------------  vim links edit"
+_echot "------- vim links edit"
 for file in /usr/bin/edit /usr/bin/editor; do
 	[ -e ${file} ] && _evalr rm ${file}
 	_evalr ln -sv /usr/bin/vim ${file}
 done
 
-_echot "------------------ vim colors"
+_echot "------- vim colors"
 sudo cp ${_PATH_BASE}/conf/vim/* /usr/share/vim/vim*/colors/
 
-_echot "----------  vim conf"
+_echot "------- vim conf"
 file=/etc/vim/vimrc
 sudo sed -i "s|^\"\(syntax\).*|\1 on|" ${file}
 opts="background=dark showmatch"
@@ -52,21 +50,21 @@ for opt in ${opts}; do
 	sudo sed -i "s|^\"\(set ${opt}.*\)$|\1|" ${file}
 done
 
-_echot "------------------ meld style"
+_echot "------- meld style"
 _evalr cp ${_PATH_BASE}/conf/meld-dark.xml /usr/share/meld/styles/meld-dark.xml
 
-_echot "------------------  icons"
+_echot "------- icons"
 path=/usr/share/icons/Foralyse
 [ -d "${path}" ] || sudo mkdir -p ${path}
 sudo cp ${_PATH_BASE}/icons/* ${path}/
 
-_echot "------------------ wp"
+_echot "------- wp"
 _evalr cp -a ${_PATH_BASE}/xtra/wp/* /usr/share/backgrounds/
 _evalr chmod 644 /usr/share/backgrounds/*
 
 ########################  USER
 
-_echot "------------------  /usr/local/bs/conf links"
+_echot "------- /usr/local/bs/conf links"
 for file in .nanorc .tmux.conf .vimrc; do
 	path_from="${_PATH_BS}/conf/${file}"
 	path=${HOME}/${file}
@@ -74,7 +72,7 @@ for file in .nanorc .tmux.conf .vimrc; do
 	ln -s "${path_from}" "${path}"
 done
 
-_echot "------------------ gtk styles"
+_echot "------- gtk styles"
 path=${HOME}/.local/share/gtksourceview-3.0
 [ -d "${path}" ] || mkdir -p ${path}
 path=${HOME}/.local/share/gtksourceview-3.0/styles
@@ -92,11 +90,11 @@ cd ${HOME}/.local/share
 path=gtksourceview-4
 [ -e "${path}" ] || ln -sv gtksourceview-3.0 ${path}
 
-_echot "------------------ tmux"
+_echot "------- tmux"
 tar xzf ${_PATH_BASE}/conf/user.tmux.tar.gz -C ${HOME}/
 _eval cp ${_PATH_BASE}/xtra/org.gnome.Terminal-tmux.desktop ${HOME}/.local/share/applications/
 
-_echot "------------------ nano"
+_echot "------- nano"
 for str in conf install; do
 	_evalr cp -a /usr/share/nano/sh.nanorc /usr/share/nano/${str}.nanorc
 	sudo sed -i 's|^\(syntax \).*|\1"'${str}'" "\.'${str}'$"|' /usr/share/nano/${str}.nanorc
@@ -114,18 +112,18 @@ for opt in ${opts}; do
 	sudo sed -i "s|^.*\(set $opt .*\)$|\1|"  ${file}
 done
 
-_echot "------------------ language-specs conf"
+_echot "------- language-specs conf"
 _evalr cp ${_PATH_BASE}/conf/gtk/*.lang /usr/share/gtksourceview-3.0/language-specs/
 
-_echot "------------------ aegisub"
+_echot "------- aegisub"
 path=${HOME}/.aegisub/
 [ -d "${path}" ] || mkdir -p ${path}
 _eval cp ${_PATH_BASE}/conf/aegisub-config.json ${path}
 
-#_echot "------------------ dvd"
+#_echot "------- dvd"
 #sudo dpkg-reconfigure libdvd-pkg
 
-_echot "------------------ gedit settings"
+_echot "------- gedit settings"
 #dconf write /org/nemo/extensions/nemo-terminal/default-visible false
 #gsettings set org.gnome.gedit.preferences.ui max-recents 30
 gsettings set org.gnome.gedit.preferences.ui side-panel-visible true
@@ -138,7 +136,7 @@ dconf write /org/gnome/gedit/plugins/filebrowser/enable-remote true
 path_plug=${HOME}/.local/share/gedit/plugins
 [ -d "${path_plug}" ] || mkdir -p "${path_plug}"
 
-_echot "------------------ gedit / restore-tabs"
+_echot "------- gedit / restore-tabs"
 path=restore-tabs
 cd ${path_plug}
 _keepmvts ${path}
@@ -150,7 +148,7 @@ rm ${path}/.gitignore
 sudo cp ${path}/org.gnome.gedit.plugins.restoretabs.gschema.xml /usr/share/glib-2.0/schemas/
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 
-_echot "------------------ gedit / duplicate-line"
+_echot "------- gedit / duplicate-line"
 path=duplicate-line
 cd ${path_plug}
 _keepmvts ${path}
@@ -162,7 +160,7 @@ sed -i 's|^\(\s*modifiers = event.state.*\)|#\1|' ${path}/duplicate_line.py
 sed -i 's|^\(\s*\)\(if modifiers ==.*\)|#\1\2\n\1if event.state \& Gdk.ModifierType.CONTROL_MASK and event.state \& Gdk.ModifierType.SHIFT_MASK:|' ${path}/duplicate_line.py
 #if event.state & Gdk.ModifierType.CONTROL_MASK and event.state & Gdk.ModifierType.SHIFT_MASK:
 
-_echot "------------------ gedit / gedit-markdown"
+_echot "------- gedit / gedit-markdown"
 path=markdown_preview
 cd ${path_plug}
 _keepmvts ${path}
@@ -171,18 +169,13 @@ unzip master.zip
 rm master.zip
 mv gedit-plugin-markdown_preview-master ${path}
 
-_echot "------------------  user icons"
+_echot "------- user icons"
 path=${HOME}/.local/share/icons
 cp ${_PATH_BASE}/icons/* ${path}/
 
-_echot "------------------ firefox tweaks"
+_echot "------- firefox tweaks"
 path=${HOME}/.mozilla/firefox/${USER}
 if [ -d "${path}" ]; then
 	ln -sv "${_PATH_BASE}/conf/user.js" ${path}
 	chown ${USER}:${USER} ${path}
 fi
-
-########################  END
-
-_echoT "===================== ${_PART} end"
-_partadd ${_PART} ${_FILE_DONE}

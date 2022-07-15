@@ -15,7 +15,7 @@ file=${_PATH_BASE}/bs/inc
 ! . ${file} && echo "Errors while importing ${file}" && exit 1
 
 _echoA "- Use from the HOST with Xubuntu 18.04 bionic already installed"
-_askno "Valid to continue"
+_askno "Validate to continue"
 
 ########################  DATA
 
@@ -39,11 +39,7 @@ fi
 _PARTS_MAN="${part_fs} init ssh upgrade global configuration root end"
 
 for _PART in ${_PARTS_MAN}; do
-	if ! _parthave ${_PART} ${_FILE_DONE}; then
-		grep -q "^# ${_PART}" ${_FILE_CONF} || echo "# ${_PART}" >> ${_FILE_CONF}
-		_source "${_PATH_BASE}/sub/${_PART}"
-		[ "${_HALT}" ] && _askno "Valid to continue"
-	fi
+	_source_sub "${_PART}"
 done
 
 ########################  MENU

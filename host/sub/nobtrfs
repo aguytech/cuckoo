@@ -2,11 +2,9 @@
 #
 # write by Aguy
 
-_echoT "\n==========================================  ${_PART}"
-
 ########################  DATA
 
-_echot "------------------ Devices"
+_echot "------- Devices"
 sudo lsblk -e 11,7 -o name,size,mountpoint
 echo
 sudo blkid|grep -v /loop
@@ -59,16 +57,16 @@ fi
 
 ########################  MAIN
 
-_echot "--------------------------"
+_echot "------- --------"
 cat "${_FILE_CONF}"
-_echot "--------------------------"
+_echot "------- --------"
 _askyn "Confirm installation" && [ "${_ANSWER}" == n ] && _exit 1
 
 # sys
 if ! grep -q "${_DEVICE_SYS}" /proc/mounts; then
 	path=/mnt_sys
-	[ -d "${path}" ] || sudo mkdir -p${path}
-	sudo mount ${_DEVICE_SYS} ${path} || _exite "Unable to mount ${_DEVICE_SYS} in ${path}"
+	[ -d "${path}" ] || _evalr mkdir -p${path}
+	_evalr mount ${_DEVICE_SYS} ${path} || _exite "Unable to mount ${_DEVICE_SYS} in ${path}"
 fi
 path_sys=$( grep "${_DEVICE_SYS}" /proc/mounts | cut -d' ' -f2 )
 [ -z "${path_sys}" ] && _exite "${path_sys} not mounted ?"
@@ -77,8 +75,8 @@ path_sys=$( grep "${_DEVICE_SYS}" /proc/mounts | cut -d' ' -f2 )
 if [ "${_DEVICE_HOME}" ]; then
 	if ! grep -q "${_DEVICE_HOME}" /proc/mounts; then
 		path=/mnt_home
-		[ -d "${path}" ] || sudo mkdir -p${path}
-		sudo mount ${_DEVICE_HOME} ${path} || _exite "Unable to mount ${_DEVICE_HOME} in ${path}"
+		[ -d "${path}" ] || _evalr mkdir -p${path}
+		_evalr mount ${_DEVICE_HOME} ${path} || _exite "Unable to mount ${_DEVICE_HOME} in ${path}"
 	fi
 	path_home=$( grep "${_DEVICE_HOME}" /proc/mounts | cut -d' ' -f2 )
 	[ -z "${path_home}" ] && _exite "${path_home} not mounted ?"
@@ -92,12 +90,11 @@ user_uid=$( grep ^${_USERNAME} ${path_sys}/etc/passwd | cut -d: -f3 )
 user_gid=$( grep ^${_USERNAME} ${path_sys}/etc/group | cut -d: -f3 )
 [ -z "${user_gid}" ] && _exite "Unable to find ${_USERNAME} in /etc/group"
 
-_echot "------------------ create paths"
-for path in /save /ext /vm; do
-	path=${path_sys}${path}
-	[ -d "${path}" ] || sudo mkdir -p "${path}"
-	sudo chown 0:${user_gid} "${path}"
-	sudo chmod g+rw "${path}"
+_echot "------- create paths"
+for path in ${path_sys}/save ${path_sys}/ext ${path_sys}/vm; do
+	[ -d "${path}" ] || _evalr mkdir -p "${path}"
+	_evalr chown 0:${user_gid} "${path}"
+	_evalr chmod g+rw "${path}"
 done
 
 if [ "${_MEM}" ]; then
@@ -111,7 +108,7 @@ tmpfs                                       /tmp              tmpfs   defaults,n
 fi
 
 if [ "${_DEVICE_EXT}" ]; then
-	_echot "------------------ device ext"
+	_echot "------- device ext"
 	uuidext=$( sudo blkid |grep ${_DEVICE_EXT} |sed 's|.* UUID="\([^"]\+\)" .*|\1|' )
 	if [ -z "${uuidext}" ]; then
 		_ask "Please give the UUID for ext"
@@ -119,61 +116,60 @@ if [ "${_DEVICE_EXT}" ]; then
 		_echO "uuidext=${uuidext}"
 	fi
 
-	_echot "------------------ /etc/fstab"
+	_echot "------- /etc/fstab"
 	file=${path_sys}/etc/fstab
 	_keepcp ${file}
 	sudo sh -c "echo '
 	UUID=${uuidext}      /ext              ext4   errors=remount-ro           0    1' >> ${file}"
 
-	_echot "------------------ mount /ext"
-	sudo mount UUID=${uuidext} /ext || _exite "Unable to mount UUID=${uuidext} in /ext"
+	_echot "------- mount /ext"
+	_evalr mount UUID=${uuidext} /ext || _exite "Unable to mount UUID=${uuidext} in /ext"
 fi
 
-_echot "------------------ bs"
+_echot "------- bs"
 path=${path_sys}${_PATH_BS}
 _keepmv "${path}"
-[ -d "${path}" ] || sudo mkdir -p "${path}"
+[ -d "${path}" ] || _evalr mkdir -p "${path}"
 if [ -d "${path_home}/shared/repo/bs" ]; then
 	sudo sh -c "echo '
 # bind
 /home/shared/repo/bs   ${_PATH_BS}    none    bind                    0    0' >> ${file}"
 else
-	sudo cp -r ${_PATH_BASE}/../bs/* ${path}/
+	_evalr cp -r ${_PATH_BASE}/../bs/* ${path}/
 fi
 
 ########################  END
 
-_echoT "===================== ${_PART} end"
 _partadd "${_PART}" "${_FILE_DONE}"
 
 ########################  EXPORT
 
 # installation system
 if [ "${path_sys}" != / ]; then
-	_echot "------------------ copy config"
+	_echot "------- copy config"
 	path="${path_home}/${_USERNAME}/${_PATH_CONF#/home/*/}"
 	_keepmv ${path}
-	[ -d "${path}" ] || sudo mkdir -p ${path}
-	sudo cp -r ${_PATH_CONF}/* ${path}/
-	sudo chown ${user_uid}:${user_gid} -R ${path_home}/${_USERNAME}
+	[ -d "${path}" ] || _evalr mkdir -p ${path}
+	_evalr cp -r ${_PATH_CONF}/* ${path}/
+	_evalr chown ${user_uid}:${user_gid} -R ${path_home}/${_USERNAME}
 
-	_echot "------------------ copy log"
+	_echot "------- copy log"
 	[ -d ${path_sys}/var/log ] && path="${path_sys}/var/log/desktop-install"
 	_keepmv ${path}
-	[ -d "${path}" ] || sudo mkdir -p ${path}
-	sudo cp -a /var/log/desktop-install/* ${path}/
-	sudo chown ${user_uid}:0 -R ${path}
-	sudo chmod 664 ${path}/*
+	[ -d "${path}" ] || _evalr mkdir -p ${path}
+	_evalr cp -a /var/log/desktop-install/* ${path}/
+	_evalr chown ${user_uid}:0 -R ${path}
+	_evalr chmod 664 ${path}/*
 
 	if grep -q "${_DEVICE_SYS} */mnt" /proc/mounts; then
-		_echot "------------------ umount ${_DEVICE_SYS}"
-		sudo umount /mnt
+		_echot "------- umount ${_DEVICE_SYS}"
+		_evalr umount /mnt
 	fi
 fi
 
-_echot "------------------ reboot ${_DEVICE_SYS}"
+_echot "------- reboot ${_DEVICE_SYS}"
 _echoA "You have to restart this installation script after the reboot"
 _echoa "The computer now will reboot"
-_askno "Valid to continue"
+_askno "Validate to continue"
 reboot
 exit

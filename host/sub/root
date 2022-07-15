@@ -2,23 +2,21 @@
 #
 # write by Aguy
 
-_echoT "\n==========================================  ${_PART}"
-
 ########################  MAIN
 
-_echot "------------------  .bash_aliases"
+_echot "------- .bash_aliases"
 file=/root/.bash_aliases
 file_from=${_PATH_BS}/conf/.bash_aliases
 _keepmv ${file}
 _evalr ln -s ${file_from} ${file}
 
-_echot "------------------  .bash_env"
+_echot "------- .bash_env"
 file=/root/.bash_env
 file_from=${_PATH_BS}/conf/.bash_env
 _keepmv ${file}
 _evalr ln -s ${file_from} ${file}
 
-_echot "------------------ .bashrc"
+_echot "------- .bashrc"
 file="/root/.bashrc"
 _keepcp ${file}
 
@@ -42,13 +40,8 @@ sudo grep -q "/.bash_aliases" ${file} || sudo sh -c "echo '
 [ -f /root/.bash_aliases ] && . /root/.bash_aliases
 '  >> ${file}"
 
-_echot "------------------  .vimrc"
+_echot "------- .vimrc"
 file=/root/.vimrc
 file_from=${_PATH_BS}/conf/.vimrc
 _keepmv ${file}
 _evalr ln -s ${file_from} ${file}
-
-########################  END
-
-_echoT "===================== ${_PART} end"
-_partadd "${_PART}" "${_FILE_DONE}"
