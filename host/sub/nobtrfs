@@ -62,7 +62,9 @@ cat "${_FILE_CONF}"
 _echot "------- --------"
 _askyn "Confirm installation" && [ "${_ANSWER}" == n ] && _exit 1
 
-# sys
+########################  DEVICES
+
+_echot "------- device sys"
 if ! grep -q "${_DEVICE_SYS}" /proc/mounts; then
 	path=/mnt_sys
 	[ -d "${path}" ] || _evalr mkdir -p${path}
@@ -71,7 +73,7 @@ fi
 path_sys=$( grep "${_DEVICE_SYS}" /proc/mounts | cut -d' ' -f2 )
 [ -z "${path_sys}" ] && _exite "${path_sys} not mounted ?"
 
-# home
+_echot "------- device home"
 if [ "${_DEVICE_HOME}" ]; then
 	if ! grep -q "${_DEVICE_HOME}" /proc/mounts; then
 		path=/mnt_home
@@ -84,7 +86,7 @@ else
 	path_home=${path_sys}/home
 fi
 
-# user
+_echot "------- user"
 user_uid=$( grep ^${_USERNAME} ${path_sys}/etc/passwd | cut -d: -f3 )
 [ -z "${user_uid}" ] && _exite "Unable to find ${_USERNAME} in /etc/passwd"
 user_gid=$( grep ^${_USERNAME} ${path_sys}/etc/group | cut -d: -f3 )
@@ -93,12 +95,19 @@ user_gid=$( grep ^${_USERNAME} ${path_sys}/etc/group | cut -d: -f3 )
 _echot "------- create paths"
 for path in ${path_sys}/save ${path_sys}/ext ${path_sys}/vm; do
 	[ -d "${path}" ] || _evalr mkdir -p "${path}"
-	_evalr chown 0:${user_gid} "${path}"
-	_evalr chmod g+rw "${path}"
+	_evalr chown ${user_uid}:${user_gid} "${path}"
 done
+_evalr chown 0:${user_gid} "${path_sys}/vm"
+_evalr chmod g+rw "${path_sys}/vm"
+
+########################  FSTAB
+
+_echot "------- fstab"
+file=${path_sys}/etc/fstab
+_keepcp ${file}
 
 if [ "${_MEM}" ]; then
-	file=${path_sys}/etc/fstab
+	_echot "------- fstab tmpfs"
 	if grep -q '^tmp.*\/tmp' /etc/fstab; then
 		sudo sed -i "/tmpfs/ s|mode=1777|mode=1777,size=${_MEM}|" ${file}
 	else
@@ -108,7 +117,7 @@ tmpfs                                       /tmp              tmpfs   defaults,n
 fi
 
 if [ "${_DEVICE_EXT}" ]; then
-	_echot "------- device ext"
+	_echot "------- fstab ext"
 	uuidext=$( sudo blkid |grep ${_DEVICE_EXT} |sed 's|.* UUID="\([^"]\+\)" .*|\1|' )
 	if [ -z "${uuidext}" ]; then
 		_ask "Please give the UUID for ext"
@@ -116,9 +125,6 @@ if [ "${_DEVICE_EXT}" ]; then
 		_echO "uuidext=${uuidext}"
 	fi
 
-	_echot "------- /etc/fstab"
-	file=${path_sys}/etc/fstab
-	_keepcp ${file}
 	sudo sh -c "echo '
 	UUID=${uuidext}      /ext              ext4   errors=remount-ro           0    1' >> ${file}"
 
@@ -126,16 +132,16 @@ if [ "${_DEVICE_EXT}" ]; then
 	_evalr mount UUID=${uuidext} /ext || _exite "Unable to mount UUID=${uuidext} in /ext"
 fi
 
-_echot "------- bs"
+_echot "------- fstab bs"
 path=${path_sys}${_PATH_BS}
 _keepmv "${path}"
-[ -d "${path}" ] || _evalr mkdir -p "${path}"
 if [ -d "${path_home}/shared/repo/bs" ]; then
+	[ -d "${path}" ] || _evalr mkdir -p "${path}"
 	sudo sh -c "echo '
 # bind
 /home/shared/repo/bs   ${_PATH_BS}    none    bind                    0    0' >> ${file}"
 else
-	_evalr cp -r ${_PATH_BASE}/../bs/* ${path}/
+	_evalr cp -r ${_PATH_BASE}/bs ${path}
 fi
 
 ########################  END
@@ -160,11 +166,6 @@ if [ "${path_sys}" != / ]; then
 	_evalr cp -a /var/log/desktop-install/* ${path}/
 	_evalr chown ${user_uid}:0 -R ${path}
 	_evalr chmod 664 ${path}/*
-
-	if grep -q "${_DEVICE_SYS} */mnt" /proc/mounts; then
-		_echot "------- umount ${_DEVICE_SYS}"
-		_evalr umount /mnt
-	fi
 fi
 
 _echot "------- reboot ${_DEVICE_SYS}"

@@ -71,9 +71,9 @@ fi
 
 ########################  MAIN
 
-_echo "--------------------------"
+_echo "------- --------"
 cat "${_FILE_CONF}"
-_echo "--------------------------"
+_echo "------- --------"
 _askyn "Confirm installation" && [ "${_ANSWER}" == n ] && _exit 1
 
 ########################  DEVICES
@@ -92,7 +92,9 @@ _evalr btrfs subvolume list .
 
 _echot "------- user"
 user_uid=$( grep ^${_USERNAME} '@/etc/passwd' | cut -d: -f3 )
+[ -z "${user_uid}" ] && _exite "Unable to find ${_USERNAME} in @/etc/passwd"
 user_gid=$( grep ^${_USERNAME} '@/etc/group' | cut -d: -f3 )
+[ -z "${user_gid}" ] && _exite "Unable to find ${_USERNAME} in @/etc/group"
 
 _echot "------- system"
 [ -d "${_SYSNAME}" ] && ! [ -d "${_SYSNAME}.keep" ] && _evalr mv "${_SYSNAME}" "${_SYSNAME}.keep"
@@ -135,10 +137,14 @@ else
 	_evalr btrfs subvolume create ext
 fi
 
-_echot "------- bs"
-[ -d home/shared/repo/bs ] || _evalr cp -r ${_PATH_BASE}/bs ${_SYSNAME}${_PATH_BS}
+if ! [ -d home/shared/repo/bs ]; then
+	_echot "------- copy ${_PATH_BS}"
+	path=${_SYSNAME}${_PATH_BS}
+	_keepmv "${path}"
+	_evalr cp -r ${_PATH_BASE}/bs ${path}
+fi
 
-_echot "------- paths create"
+_echot "------- create paths"
 paths="${_SYSNAME}/save ${_SYSNAME}/ext ${_SYSNAME}${_PATH_BS}"
 for path in ${paths}; do
 	[ -d "${path}" ] || _evalr mkdir "${path}"
@@ -179,7 +185,7 @@ if [ "${_DEVICE_EXT}" ]; then
 	fi
 fi
 
-_echot "------- /etc/fstab"
+_echot "------- fstab"
 file=${_SYSNAME}/etc/fstab
 _keepcp ${file}
 sudo sed -i "\|/var/cache |d" ${file}
@@ -207,6 +213,7 @@ UUID=${uuidext}      /btrfs/ext        btrfs   noauto,defaults,noatime,space_cac
 
 # tmpfs
 if [ "${_MEM}" ]; then
+	_echot "------- fstab tmpfs"
 	if grep -q '^tmp.*\/tmp' /etc/fstab; then
 		sudo sed -i "/tmpfs/ s|mode=1777|mode=1777,size=${_MEM}|" ${file}
 	else
@@ -279,14 +286,14 @@ _partadd "${_PART}" "${_FILE_DONE}"
 _echot "------- mount ${_DEVICE_SYS}"
 _evalr mount "${_DEVICE_SYS}" ${path_sys} || _exite "Unable to mount ${_DEVICE_SYS} in ${path_sys}"
 
-_echot "------- copy desktop-install config"
+_echot "------- copy config"
 path="${path_sys}/user-${_SYSNAME}/${_PATH_CONF#/home/*/}"
 _keepmv ${path}
 [ -d "${path}" ] || _evalr mkdir -p ${path}
 _evalr cp -r ${_PATH_CONF}/* ${path}/
 _evalr chown ${user_uid}:${user_gid} -R ${path_sys}/user-${_SYSNAME}
 
-_echot "------- copy desktop-install log"
+_echot "------- copy log"
 path="${path_sys}/${_SYSNAME}/var/log/desktop-install"
 _keepmv ${path}
 [ -d "${path}" ] || _evalr mkdir -p ${path}
