@@ -5,12 +5,12 @@
 ########################  MAIN
 
 _echot "------- languages"
-_echoA "Select 'Region & language' & 'Manage installed languages' to update required files & close windows,"
+_echoA "Close language window after validation."
 _askno "Validate to continue"
-sudo gnome-control-center
+sudo gnome-language-selector
 
 _echot "------- upgrade"
-_eval upgrade
+_eval ${_PATH_BS}/upgrade
 
 ########################  END
 
