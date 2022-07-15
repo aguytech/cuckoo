@@ -23,6 +23,7 @@ ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 
 _echot "------- tools"
 packages="dconf-editor meld qt5ct"
+packages+=" thunar-media-tags-plugin tumbler-plugins-extra"
 packages+=" galculator gnome-tweak-tool"
 #   gnome-system-tools
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
