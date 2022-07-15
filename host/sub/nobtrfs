@@ -140,8 +140,6 @@ if [ -d "${path_home}/shared/repo/bs" ]; then
 	sudo sh -c "echo '
 # bind
 /home/shared/repo/bs   ${_PATH_BS}    none    bind                    0    0' >> ${file}"
-else
-	_evalr cp -r ${_PATH_BASE}/bs ${path}
 fi
 
 ########################  END

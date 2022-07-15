@@ -61,3 +61,8 @@ grep -q ". \${HOME}/.bash_aliases" ${file} || echo "
 [ -f \${HOME}/.bash_aliases ] && . \${HOME}/.bash_aliases"  >> ${file}
 
 . ${file}
+
+if ! [ -d home/shared/repo/bs ]; then
+	_echot "------- rsync ${_PATH_BS}"
+	_evalr rsync -rlt ${_PATH_BASE}/bs/ ${_PATH_BS}/
+fi

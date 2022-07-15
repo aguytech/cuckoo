@@ -137,13 +137,6 @@ else
 	_evalr btrfs subvolume create ext
 fi
 
-if ! [ -d home/shared/repo/bs ]; then
-	_echot "------- copy ${_PATH_BS}"
-	path=${_SYSNAME}${_PATH_BS}
-	_keepmv "${path}"
-	_evalr cp -r ${_PATH_BASE}/bs ${path}
-fi
-
 _echot "------- create paths"
 paths="${_SYSNAME}/save ${_SYSNAME}/ext ${_SYSNAME}${_PATH_BS}"
 for path in ${paths}; do
