@@ -14,7 +14,7 @@ sudo apt update
 ########################  MAIN
 
 _echot "------- system"
-packages="build-essential curl exfat-utils gnupg2 hfsprogs htop kpartx most pv testdisk tree"
+packages="build-essential curl exfat-utils gnupg2 lnav hfsprogs htop kpartx most ncdu pv testdisk tree"
 packages+=" gdebi gparted tmux vim"
 packages+=" p7zip-full p7zip-rar zip unzip rar unrar"
 # oracle-java7-installer ntfsprogs grsync gtk2-engines-pixbuf libnss-myhostname atop fslint dstat icedtea-8-plugin
@@ -22,8 +22,9 @@ ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
 _echot "------- tools"
-packages="baobab dconf-editor font-manager gnome-sushi meld qt5ct"
-packages+="  gnome-system-monitor gnome-system-tools gnome-tweak-tool"
+packages="dconf-editor meld qt5ct"
+packages+=" galculator gnome-tweak-tool"
+#   gnome-system-tools
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
