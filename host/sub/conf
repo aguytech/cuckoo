@@ -21,11 +21,12 @@ sudo swapon -v
 
 _echot "------- profile"
 export PATH="${PATH}:${_PATH_BS}"
-export QT_QPA_PLATFORMTHEME=qt5ct
 sudo sh -c "echo '# PATH
-export PATH=\${PATH}:${_PATH_BS}
-# QT
-export QT_QPA_PLATFORMTHEME=qt5ct' > /etc/profile.d/desktop.sh"
+export PATH=\${PATH}:${_PATH_BS}' > /etc/profile.d/desktop.sh"
+
+_echot "------- QT_QPA_PLATFORMTHEME"
+export QT_QPA_PLATFORMTHEME=qt5ct
+sudo grep 'export QT_QPA_PLATFORMTHEME' /etc -rl|xargs sudo sed -i '/export QT_QPA_PLATFORMTHEME=/ s|=.*$|=qt5ct|'
 
 _echot "------- bash-completion"
 _evalr "cp -a ${_PATH_BASE}/xtra/bash-completion/* /usr/share/bash-completion/completions/"
@@ -124,9 +125,6 @@ opts+="errorcolor functioncolor keycolor numbercolor selectedcolor statuscolor s
 for opt in ${opts}; do
 	sudo sed -i "s|^.*\(set $opt .*\)$|\1|"  ${file}
 done
-
-_echot "------- QT_QPA_PLATFORMTHEME"
-sudo grep 'export QT_QPA_PLATFORMTHEME' /etc -rl|xargs sudo sed -i '/export QT_QPA_PLATFORMTHEME=/ s|=.*$|=qt5ct|'
 
 _echot "------- QT5"
 _echoA "After validation, adjust settings for qt5 and close qt5ct window"
