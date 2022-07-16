@@ -63,7 +63,7 @@ fi
 _confset _MEM "${_MEM}"
 
 if [ -z ${_USERNAME+x} ]; then
-	anstmp="nikita"
+	anstmp="cuckoo"
 	_askno "Give the user name (${anstmp})"
 	_USERNAME=${_ANSWER:-${anstmp}}
 	_confset _USERNAME "${_USERNAME}"

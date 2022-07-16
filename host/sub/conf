@@ -1,10 +1,6 @@
 #!/bin/bash
-#
-# write by Aguy
 
-grep -q "^# ${_PART}" "${_FILE_CONF}" || echo -e "# ${_PART}" >> "${_FILE_CONF}"
-
-########################  MAIN
+########################  SYSTEM
 
 _echot "------- grub"
 file=/etc/default/grub
@@ -24,6 +20,8 @@ sudo sh -c 'echo vm.swappiness=40 > /etc/sysctl.d/99-swappiness.conf' # limit sw
 sudo swapon -v
 
 _echot "------- profile"
+export PATH="${PATH}:${_PATH_BS}"
+export QT_QPA_PLATFORMTHEME=qt5ct
 sudo sh -c "echo '# PATH
 export PATH=\${PATH}:${_PATH_BS}
 # QT
@@ -39,7 +37,7 @@ for file in /usr/bin/edit /usr/bin/editor; do
 done
 
 _echot "------- vim colors"
-sudo cp ${_PATH_BASE}/conf/vim/* /usr/share/vim/vim*/colors/
+_evalr cp ${_PATH_BASE}/conf/vim/* /usr/share/vim/vim*/colors/
 
 _echot "------- vim conf"
 file=/etc/vim/vimrc
@@ -51,30 +49,37 @@ for opt in ${opts}; do
 done
 
 _echot "------- meld style"
-_evalr cp ${_PATH_BASE}/conf/meld-dark.xml /usr/share/meld/styles/meld-dark.xml
+_evalr cp ${_PATH_BASE}/conf/meld-dark.xml /usr/share/meld/styles/
 
 _echot "------- icons"
 path=/usr/share/icons/Foralyse
 [ -d "${path}" ] || sudo mkdir -p ${path}
-sudo cp ${_PATH_BASE}/icons/* ${path}/
+_evalr cp ${_PATH_BASE}/icons/* ${path}/
 
 _echot "------- wp"
-_evalr cp -a ${_PATH_BASE}/xtra/wp/* /usr/share/backgrounds/
-_evalr chmod 644 /usr/share/backgrounds/*
+path=/usr/share/backgrounds/xfce
+_evalr cp ${_PATH_BASE}/xtra/wp/* ${path}/
+_evalr chmod 644 ${path}/*
 
 ########################  USER
 
-_echot "------- /usr/local/bs/conf links"
+_echot "------- user icons"
+path=${HOME}/.local/share/icons
+_eval cp ${_PATH_BASE}/icons/* ${path}/
+
+_echot "------- user conf"
 for file in .nanorc .tmux.conf .vimrc; do
-	path_from="${_PATH_BS}/conf/${file}"
 	path=${HOME}/${file}
 	_keepmv "${path}"
-	ln -s "${path_from}" "${path}"
+	_eval ln -s "${_PATH_BS}/conf/${file}" "${path}"
 done
 
+_echot "------- thunar-volman"
+xfconf-query -c thunar-volman -p /autobrowse/enabled -s false
+xfconf-query -c thunar-volman -p /automount-drives/enabled -s false
+xfconf-query -c thunar-volman -p /automount-media/enabled -s false
+
 _echot "------- gtk styles"
-path=${HOME}/.local/share/gtksourceview-3.0
-[ -d "${path}" ] || mkdir -p ${path}
 path=${HOME}/.local/share/gtksourceview-3.0/styles
 # link or copy
 path_repo=/home/shared/.local/share/gtksourceview-3.0/styles
@@ -90,8 +95,16 @@ cd ${HOME}/.local/share
 path=gtksourceview-4
 [ -e "${path}" ] || ln -sv gtksourceview-3.0 ${path}
 
-_echot "------- tmux"
-tar xzf ${_PATH_BASE}/conf/user.tmux.tar.gz -C ${HOME}/
+_echot "------- user conf"
+paths=".tmux"
+for path in ${paths}; do
+	_keepmv ${path}
+done
+for file in ${_PATH_BASE}/conf/user.tmux.tar.gz; do
+	tar xzf ${file} -C ${HOME}/
+done
+
+_echot "------- tmux desktop"
 _eval cp ${_PATH_BASE}/xtra/org.gnome.Terminal-tmux.desktop ${HOME}/.local/share/applications/
 
 _echot "------- nano"
@@ -112,9 +125,18 @@ for opt in ${opts}; do
 	sudo sed -i "s|^.*\(set $opt .*\)$|\1|"  ${file}
 done
 
-_echot "------- language-specs conf"
-_evalr cp ${_PATH_BASE}/conf/gtk/*.lang /usr/share/gtksourceview-3.0/language-specs/
+_echot "------- QT_QPA_PLATFORMTHEME"
+sudo grep 'export QT_QPA_PLATFORMTHEME' /etc -rl|xargs sudo sed -i '/export QT_QPA_PLATFORMTHEME=/ s|=.*$|=qt5ct|'
 
-_echot "------- user icons"
-path=${HOME}/.local/share/icons
-cp ${_PATH_BASE}/icons/* ${path}/
+_echot "------- QT5"
+_echoA "After validation, adjust settings for qt5 and close qt5ct window"
+_askno "Validate to continue"
+qt5ct 2>/dev/null
+
+_echot "------- plank"
+path=${HOME}/.config/autostart
+[ -d "${path}" ] || mkdir -p ${path}
+cp ${_PATH_BASE}/xtra/plank.desktop ${path}/
+_echoA "After validation, adjust plank preferences and close plank window"
+_askno "Validate to continue"
+plank --preferences &
