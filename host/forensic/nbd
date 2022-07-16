@@ -1,0 +1,45 @@
+#!/bin/bash
+
+_echot "------- install"
+if type apt >/dev/null 2>&1; then
+	sudo apt install -y qemu-utils
+elif type pacman >/dev/null 2>&1; then
+	sudo pacman --noconfirm -S qemu-img
+else
+	_echoA "Install package in your system to have binary qemu-nbd available"
+	_exit
+fi
+
+_echot "------- path"
+path="${_PATH_NBD}"
+[ -d "${path}" ] || sudo mkdir -p ${path}
+
+_echot "------- script"
+file=${_PATH_BASE}/xtra/nbd.sh
+file2=/usr/local/bin/${file##*/}
+! [ -f "${file}" ] && _exite "Unable to find file: ${file}"
+sudo cp ${file} ${file2}
+sudo chmod +x ${file2}
+sudo sed -i "/^_PATH_NBD=/ s|=.*$|=${_PATH_NBD}|" ${file2}
+
+_echot "------- bookmarks"
+file=~/.config/Thunar/uca.xml
+file=${HOME}/.config/gtk-3.0/bookmarks
+grep -q "file://${_PATH_NBD}" ${file} || echo "file://${_PATH_NBD}" >> ${file}
+
+_echot "------- CA"
+file=~/.config/Thunar/uca.xml
+[ -d ~/.config/Thunar ] || mkdir -p ~/.config/Thunar
+if [ -f "${file}" ]; then
+	[ -f ${file}.keep ] || cp -a ${file} ${file}.keep
+else
+	echo -e '<?xml version="1.0" encoding="UTF-8"?>\n<actions>\n</actions>' > ${file}
+fi
+# not already made
+if ! grep -q 1655620394868230-1 ${file}; then
+	sed -i '$,1d' ${file}
+	cat ${file} ${_PATH_BASE}/conf/ca.xml > ${file}.tmp
+	_eval mv ${file}.tmp ${file}
+fi
+
+_echoA "logout/login from your computer to apply changes"

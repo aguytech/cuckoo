@@ -1,8 +1,7 @@
 #!/bin/bash
-#
-# write by Aguy
 
 ######################## CONF
+
 _TRACE=debug
 _PATH_BASE=$( readlink -f ${0%/*} )
 _PATH_CONF=${HOME}/.config/cuckoo
@@ -10,16 +9,16 @@ _PATH_LOG=/var/log/cuckoo
 _CMD="sudo apt"
 _CMD_INS="sudo apt install -y"
 
+# inc
 file=${_PATH_BASE}/bs/inc
-! [ -f ${file} ] && echo "Unable to find file: ${file}" && exit 1
-! . ${file} && echo "Errors while importing ${file}" && exit 1
+! [ -f "${file}" ] && echo "Unable to find file: ${file}" && exit 1
+! . ${file} && echo "Errors while sourcing file: ${file}" && exit 1
 
 _echoA "- Use from the HOST with Xubuntu 18.04 bionic already installed"
 _askno "Validate to continue"
 
 ########################  DATA
 
-# btrfs
 if [ -z ${_BTRFS+x} ]; then
 	_askyn "BTRFS are used for system?"
 	_BTRFS=${_ANSWER/n/}
@@ -27,7 +26,6 @@ if [ -z ${_BTRFS+x} ]; then
 fi
 [ "${_BTRFS}" ] && part_fs="btrfs" || part_fs="nobtrfs"
 
-# halt
 if [ -z ${_HALT+x} ]; then
 	_askyn "Enable halt between each parts?"
 	_HALT=${_ANSWER/n/}
@@ -40,6 +38,14 @@ _PARTS_MAN="${part_fs} init ssh upgrade global conf root end"
 
 for _PART in ${_PARTS_MAN}; do
 	_source_sub "${_PART}"
+done
+
+########################  FORENSIC
+
+_PARTS_FOR="share cases nbd init global conf root perso"
+
+for _PART in ${_PARTS_FOR}; do
+	_source_sub "${_PART}" forensic
 done
 
 ########################  MENU

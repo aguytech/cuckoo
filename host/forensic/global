@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# write by Aguy
+
+########################  REPOSITORIES
+
+_echot "------- apt repository"
+file=/etc/apt/sources.list
+_keepcp ${file}
+
+sudo add-apt-repository -yn ppa:mozillateam/ppa # mozilla
+sudo apt update
+
+########################  MAIN
+
+_echot "------- forensic"
+packages="binutils-common bsdmainutils pev radare2 bless wxhexeditor"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
