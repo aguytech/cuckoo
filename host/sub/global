@@ -22,10 +22,9 @@ ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
 _echot "------- tools"
-packages="dconf-editor meld qt5ct"
+packages="dconf-editor galculator meld qt5ct plank"
 packages+=" thunar-media-tags-plugin tumbler-plugins-extra"
-packages+=" galculator gnome-tweak-tool"
-#   gnome-system-tools
+packages+=" blackbird-gtk-theme gtk3-engines-breeze qt5-style-plugins"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
