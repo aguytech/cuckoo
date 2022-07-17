@@ -8,6 +8,8 @@ _PATH_CONF=${HOME}/.config/cuckoo
 _PATH_LOG=/var/log/cuckoo
 _CMD="sudo apt"
 _CMD_INS="sudo apt install -y"
+_FILE_PIP3="${_PATH_LOG}/install.pip3"
+_FILE_PIP2="${_PATH_LOG}/install.pip2"
 
 # inc
 file=${_PATH_BASE}/bs/inc
