@@ -1,25 +1,20 @@
 #!/bin/bash
 
-_echot "------- install"
-if type apt >/dev/null 2>&1; then
-	sudo apt install -y qemu-utils
-elif type pacman >/dev/null 2>&1; then
-	sudo pacman --noconfirm -S qemu-img
-else
-	_echoA "Install package in your system to have binary qemu-nbd available"
-	_exit
-fi
-
 _echot "------- path"
 path="${_PATH_NBD}"
-[ -d "${path}" ] || sudo mkdir -p ${path}
+[ -d "${path}" ] || _evalr mkdir -p ${path}
+
+_echot "------- install"
+packages="qemu-utils"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
 _echot "------- script"
-file=${_PATH_BASE}/xtra/nbd.sh
-file2=/usr/local/bin/${file##*/}
+file=${_PATH_BASE}/scripts/nbd.sh
+file2=/usr/local/bin/nbd
 ! [ -f "${file}" ] && _exite "Unable to find file: ${file}"
-sudo cp ${file} ${file2}
-sudo chmod +x ${file2}
+_evalr cp ${file} ${file2}
+_evalr chmod +x ${file2}
 sudo sed -i "/^_PATH_NBD=/ s|=.*$|=${_PATH_NBD}|" ${file2}
 
 _echot "------- bookmarks"

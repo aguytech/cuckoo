@@ -17,7 +17,7 @@
 	<icon>go-down</icon>
 	<name>nbd mount</name>
 	<unique-id>1655620394868230-1</unique-id>
-	<command>pkexec --user root nbd.sh mount %f</command>
+	<command>pkexec --user root nbd mount %f</command>
 	<description>mount file to /vms/ndbX with nbd</description>
 	<patterns>*.raw;*.qcow;*.qcow2;*.qed;*.parallels;*.vhdx;*.vmdk;*.vdi</patterns>
 	<other-files/>
@@ -26,7 +26,7 @@
 	<icon>go-up</icon>
 	<name>nbd umount</name>
 	<unique-id>1655622384229194-2</unique-id>
-	<command>pkexec --user root nbd.sh umount %f</command>
+	<command>pkexec --user root nbd umount %f</command>
 	<description>unmount file from /vms/ndbX with nbd</description>
 	<patterns>*.raw;*.qcow;*.qcow2;*.qed;*.parallels;*.vhdx;*.vmdk;*.vdi</patterns>
 	<other-files/>
