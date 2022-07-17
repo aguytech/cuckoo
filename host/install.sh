@@ -14,24 +14,36 @@ file=${_PATH_BASE}/bs/inc
 ! [ -f "${file}" ] && echo "Unable to find file: ${file}" && exit 1
 ! . ${file} && echo "Errors while sourcing file: ${file}" && exit 1
 
-########################  MANDATORY
+########################  SUB
 
 _echoA "- Use from the HOST with Xubuntu 18.04 bionic already installed"
 _askno "Validate to continue"
 
-_PARTS_MAN="data test ${part_fs} init ssh upgrade global qemu conf root end"
+_PARTS_SUB="test data ${part_fs} init ssh upgrade global conf root"
 
-for _PART in ${_PARTS_MAN}; do
+for _PART in ${_PARTS_SUB}; do
 	_source_sub "${_PART}"
+done
+
+########################  QEMU
+
+_PARTS_QEMU="global share nbd"
+
+for _PART in ${_PARTS_QEMU}; do
+	_source_sub "${_PART}" qemu
 done
 
 ########################  FORENSIC
 
-_PARTS_FOR="data init qemu share nbd global conf root perso"
+_PARTS_FOR="global conf root perso end"
 
 for _PART in ${_PARTS_FOR}; do
 	_source_sub "${_PART}" forensic
 done
+
+########################  FORENSIC
+
+_source_sub end
 
 ########################  MENU
 

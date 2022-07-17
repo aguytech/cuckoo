@@ -1,8 +1,9 @@
 #!/bin/bash
 
-sudo usermod -G libvirt-qemu -a ${USER}
-
+_echot "------- path"
 [ -d "${_PATH_SHARE}" ] || sudo mkdir -p "${_PATH_SHARE}"
+
+_echot "------- permissions"
 sudo setfacl -Rm u:libvirt-qemu:rwx ${_PATH_SHARE}
 sudo setfacl -d -Rm u:libvirt-qemu:rwx ${_PATH_SHARE}
 sudo setfacl -Rm g:libvirt-qemu:rwx ${_PATH_SHARE}

@@ -2,10 +2,5 @@
 
 ########################  MAIN
 
-_echot "------- languages"
-_echoA "Close language window after validation."
-_askno "Validate to continue"
-sudo gnome-language-selector
-
 _echot "------- upgrade"
 _eval ${_PATH_BS}/upgrade
