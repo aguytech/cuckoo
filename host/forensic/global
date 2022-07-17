@@ -2,15 +2,6 @@
 #
 # write by Aguy
 
-########################  REPOSITORIES
-
-_echot "------- apt repository"
-file=/etc/apt/sources.list
-_keepcp ${file}
-
-sudo add-apt-repository -yn ppa:mozillateam/ppa # mozilla
-sudo apt update
-
 ########################  MAIN
 
 _echot "------- forensic"
