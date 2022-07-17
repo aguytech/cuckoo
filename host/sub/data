@@ -7,20 +7,6 @@ if [ -z ${_BTRFS+x} ]; then
 fi
 [ "${_BTRFS}" ] && part_fs="btrfs" || part_fs="nobtrfs"
 
-if [ -z "${_PATH_SHARE}" ]; then
-	anstmp=/vms/share
-	_askno "Give the shared path from the Host (${anstmp})"
-	_PATH_SHARE=${_ANSWER:-${anstmp}}
-	_confset _PATH_SHARE "${_PATH_SHARE}"
-fi
-
-if [ -z "${_PATH_NBD}" ]; then
-	anstmp=/vms/nbd
-	_askno "Give the path to mount device files (${anstmp})"
-	_PATH_NBD=${_ANSWER:-${anstmp}}
-	_confset _PATH_NBD "${_PATH_NBD}"
-fi
-
 if [ -z ${_HALT+x} ]; then
 	_askyn "Enable halt between each parts?"
 	_HALT=${_ANSWER/n/}

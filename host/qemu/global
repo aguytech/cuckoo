@@ -1,5 +1,23 @@
 #!/bin/bash
 
+########################  DATA
+
+if [ -z "${_PATH_SHARE}" ]; then
+	anstmp=/vms/share
+	_askno "Give the shared path from the Host (${anstmp})"
+	_PATH_SHARE=${_ANSWER:-${anstmp}}
+	_confset _PATH_SHARE "${_PATH_SHARE}"
+fi
+
+if [ -z "${_PATH_NBD}" ]; then
+	anstmp=/vms/nbd
+	_askno "Give the path to mount device files (${anstmp})"
+	_PATH_NBD=${_ANSWER:-${anstmp}}
+	_confset _PATH_NBD "${_PATH_NBD}"
+fi
+
+########################  MAIN
+
 _echot "------- cpu-checker"
 packages="cpu-checker"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
@@ -8,6 +26,7 @@ ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 [ "$( kvm-ok 2>/dev/null )" ] || _exite "Please enable Virtualization capability in your BIOS"
 
 _echot "------- install"
-packages="qemu-kvm libvirt-bin bridge-utils virtinst virt-manager"
+packages="qemu-kvm libvirt-bin virtinst virt-manager"
+# bridge-utils
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
