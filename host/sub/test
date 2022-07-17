@@ -3,7 +3,7 @@
 ! grep -q 'vmx\|svm' /proc/cpuinfo && _exite "CPU does not allows KVM virtualization"
 
 if [ -z ${_CPU_VIRT+x} ]; then
-	_CPU_VIRT=$( grep -oc '(vmx|svm)' /proc/cpuinfo )
+	_CPU_VIRT=$( grep -oc 'vmx\|svm' /proc/cpuinfo )
 	_confset _CPU_VIRT "${_CPU_VIRT}"
 	_echoa "Your hardware allows to use ${_CPU_VIRT} cpu(s) for KVM"
 fi
