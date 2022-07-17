@@ -42,7 +42,7 @@ done
 
 ########################  FORENSIC
 
-_PARTS_FOR="share cases nbd init global conf root perso"
+_PARTS_FOR="init share cases nbd global conf root perso"
 
 for _PART in ${_PARTS_FOR}; do
 	_source_sub "${_PART}" forensic
