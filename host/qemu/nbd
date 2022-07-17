@@ -10,7 +10,7 @@ ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
 _echot "------- script"
-file=${_PATH_BASE}/scripts/nbd.sh
+file=${_PATH_BASE}/bs/scripts/nbd.sh
 file2=/usr/local/bin/nbd
 ! [ -f "${file}" ] && _exite "Unable to find file: ${file}"
 _evalr cp ${file} ${file2}
