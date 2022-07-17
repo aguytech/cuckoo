@@ -14,27 +14,12 @@ file=${_PATH_BASE}/bs/inc
 ! [ -f "${file}" ] && echo "Unable to find file: ${file}" && exit 1
 ! . ${file} && echo "Errors while sourcing file: ${file}" && exit 1
 
+########################  MANDATORY
+
 _echoA "- Use from the HOST with Xubuntu 18.04 bionic already installed"
 _askno "Validate to continue"
 
-########################  DATA
-
-if [ -z ${_BTRFS+x} ]; then
-	_askyn "BTRFS are used for system?"
-	_BTRFS=${_ANSWER/n/}
-	_confset _BTRFS "${_BTRFS}"
-fi
-[ "${_BTRFS}" ] && part_fs="btrfs" || part_fs="nobtrfs"
-
-if [ -z ${_HALT+x} ]; then
-	_askyn "Enable halt between each parts?"
-	_HALT=${_ANSWER/n/}
-	_confset _HALT "${_HALT}"
-fi
-
-########################  MANDATORY
-
-_PARTS_MAN="${part_fs} init ssh upgrade global conf root end"
+_PARTS_MAN="data test ${part_fs} init ssh upgrade global qemu conf root end"
 
 for _PART in ${_PARTS_MAN}; do
 	_source_sub "${_PART}"
@@ -42,7 +27,7 @@ done
 
 ########################  FORENSIC
 
-_PARTS_FOR="init share cases nbd global conf root perso"
+_PARTS_FOR="data init qemu share nbd global conf root perso"
 
 for _PART in ${_PARTS_FOR}; do
 	_source_sub "${_PART}" forensic

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+_echot "------- cpu-checker"
+packages="cpu-checker"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+[ "$( kvm-ok 2>/dev/null )" ] || _exite "Please enable Virtualization capability in your BIOS"
+
+_echot "------- install"
+packages="qemu-kvm libvirt-bin bridge-utils virtinst virt-manager"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
