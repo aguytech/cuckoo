@@ -27,7 +27,7 @@ done
 
 ########################  QEMU
 
-_PARTS_QEMU="global share nbd"
+_PARTS_QEMU="global share nbd conf"
 
 for _PART in ${_PARTS_QEMU}; do
 	_source_sub "${_PART}" qemu

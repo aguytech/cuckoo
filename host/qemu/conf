@@ -1,0 +1,4 @@
+#!/bin/bash
+
+_echot "------- libvirt-qemu"
+sudo usermod -G libvirt-qemu -a ${USER}
