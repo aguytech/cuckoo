@@ -106,7 +106,7 @@ for file in ${_PATH_BASE}/conf/user.tmux.tar.gz; do
 done
 
 _echot "------- tmux desktop"
-_eval cp ${_PATH_BASE}/xtra/org.gnome.Terminal-tmux.desktop ${HOME}/.local/share/applications/
+_eval cp ${_PATH_BASE}/xtra/xfce4-terminal-tmux.desktop ${HOME}/.local/share/applications/
 
 _echot "------- nano"
 for str in conf install; do
