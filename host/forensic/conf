@@ -7,6 +7,9 @@ sudo rm /etc/localtime && sudo ln -sv /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
 ########################  USER
 
+_echot "------- libvirt-qemu"
+sudo usermod -G libvirt-qemu -a ${USER}
+
 _echot "------- user conf"
 paths=".tmux .wxHexEditor .java/.userPrefs/us/deathmarine/luyten/"
 for path in ${paths}; do
