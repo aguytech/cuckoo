@@ -1,0 +1,22 @@
+#!/bin/bash
+
+_echot "------- packages"
+packages="libparse-win32registry-perl"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- regripper"
+path=$(find /usr/share -name Win32Registry)
+cd /usr/share && _evalr git clone https://github.com/keydet89/RegRipper3.0.git 
+_evalr mv RegRipper3.0 regripper
+for file in WinNT/File.pm WinNT/Key.pm Base.pm; do _evalr mv ${path}/${file} ${path}/${file}.$(date +%s); _evalr ln -s /usr/share/regripper/${file##*/} ${path}/${file}; done
+cd regripper
+_evalr cp -a rip.pl rip.pl.$(date +%s)
+sudo sed -i '/^my @alerts = ();/a my \$plugindir = "/usr/share/regripper/plugins/";' rip.pl
+sudo sed -i "1c #! $(which perl)\nuse lib qw(/usr/lib/perl5/);" rip.pl
+_evalr chmod +x rip.pl
+_evalr ln -s /usr/share/regripper/rip.pl /usr/bin/regripper
+_evalr ln -s /usr/share/regripper/rip.pl /usr/bin/rip
+
+_echot "------- regripper -h"
+_eval regripper -h
