@@ -1,8 +1,41 @@
 #!/bin/bash
 
-########################  MAIN
-
-_echot "------- forensic"
-packages="binutils-common bsdmainutils pev radare2 bless wxhexeditor"
+_echot "------- binary"
+packages="bsdiff vbindiff"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- network"
+packages="dnsutils net-tools netcat openssh-server traceroute whois xinetd"
+packages+=" bmon darkstat dstat hping3 iftop ifstat tcpdump vnstat"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- hive"
+packages="libhivex-bin chntpw reglookup"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- others"
+packages="john libscca-utils pev radare2"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+
+########################  PIP
+
+_echot "------- pip2"
+packages="balbuzard"
+python -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+_echot "------- pip3"
+packages="malcarve r2env regrippy"
+python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip3 install: ${packages}"; return 1; }
+
+########################  GIT
+
+file=/usr/local/bin/b64sha
+_evalr curl -sS https://raw.githubusercontent.com/labcif/Base64SHA/master/b64sha -o ${file}
+_evalr chmod +x ${file}

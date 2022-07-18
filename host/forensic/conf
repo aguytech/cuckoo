@@ -3,7 +3,8 @@
 ########################  SYSTEM
 
 _echot "------- UTC 0"
-sudo rm /etc/localtime && sudo ln -sv /usr/share/zoneinfo/Etc/UTC /etc/localtime
+_evalr rm /etc/localtime
+_evalr ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
 ########################  USER
 
@@ -13,17 +14,17 @@ for path in ${paths}; do
 	_keepmv ${path}
 done
 for file in $(ls ${_PATH_BASE}/conf/user.*.tar.gz); do
-	tar xzf ${file} -C ${HOME}/
+	_eval tar xzf ${file} -C ${HOME}/
 done
 
 _echot "------- geany"
 path=${HOME}/.config/geany/colorschemes
 _keepmv ${path}
-[ -d "${path}" ] || mkdir -p ${path}
- cp ${_PATH_BASE}/conf/geany/* ${path}/
+[ -d "${path}" ] || _eval mkdir -p ${path}
+_eval  cp ${_PATH_BASE}/conf/geany/* ${path}/
 
 _echot "------- bless"
 path=${HOME}/.config/bless/layouts/
 _keepmv ${path}
-[ -d "${path}" ] || mkdir -p ${path}
-cp ${_PATH_BASE}/conf/bless/* ${path}/
+[ -d "${path}" ] || _eval mkdir -p ${path}
+_eval cp ${_PATH_BASE}/conf/bless/* ${path}/

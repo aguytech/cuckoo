@@ -1,15 +1,10 @@
 #!/bin/bash
 
-########################  REPOSITORIES
-
-_echot "------- apt repository"
+_echot "------- repository"
 file=/etc/apt/sources.list
 _keepcp ${file}
-
-sudo add-apt-repository -yn ppa:mozillateam/ppa # mozilla
-sudo apt update
-
-########################  MAIN
+_evalr add-apt-repository -yn ppa:mozillateam/ppa # mozilla
+${_CMD} update
 
 _echot "------- system"
 packages="build-essential curl exfat-utils gnupg2 lnav hfsprogs htop kpartx most ncdu pv testdisk tree"
