@@ -1,0 +1,61 @@
+#!/bin/bash
+
+_echot "------- packages"
+packages="mtd-utils lhasa cabextract cramfsswap squashfs-tools srecord"
+packages+=" arj bzip2 gzip lzop p7zip p7zip-full tar"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- pip3"
+packages="nose coverage pycryptodome pyqtgraph capstone matplotlib"
+_eval python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+########################  GITHUB
+
+_echot "------- git squashfs4.5"
+# Install squashfs to extract non-standard SquashFS images
+cd /tmp && _eval curl -s -O https://raw.githubusercontent.com/aguytech/squashfs4.5/master/build.sh
+sh build.sh
+
+_echot "------- git jefferson"
+# Install jefferson to extract JFFS2 file systems
+_eval python3 -m pip install -U cstruct
+cd /tmp && _eval git clone https://github.com/sviehb/jefferson
+cd jefferson && _evalr python3 setup.py install
+cd .. && _evalr rm -fR jefferson
+
+_echot "------- git ubi_reader"
+# Install ubi_reader to extract UBIFS file systems
+packages="liblzo2-dev"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+packages="python-lzo"
+_eval python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+cd /tmp && _eval git clone https://github.com/jrspruitt/ubi_reader
+cd ubi_reader && _evalr python3 setup.py install
+cd .. && _evalr rm -fR ubi_reader
+
+_echot "------- git yaffshiv"
+# Install yaffshiv to extract YAFFS file systems
+cd /tmp && _eval git clone https://github.com/devttys0/yaffshiv
+cd yaffshiv && _evalr python3 setup.py install
+cd .. && _evalr rm -fR yaffshiv
+
+_echot "------- git sdtraces"
+# Install unstuff (closed source) to extract StuffIt archive files
+_eval mkdir /tmp/sdtraces
+cd /tmp/sdtraces && _eval curl -sS http://downloads.tuxfamily.org/sdtraces/stuffit520.611linux-i386.tar.gz | tar -zxv
+_evalr cp bin/* /usr/local/bin/
+cd .. && _evalr rm -fR sdtraces
+
+########################  BINWALK
+
+_echot "------- git binwalk"
+cd /tmp && _eval git clone https://github.com/ReFirmLabs/binwalk
+cd binwalk && _evalr python3 setup.py install
+cd .. && _evalr rm -fR binwalk
+
+_echot "------- binwalk -h"
+binwalk -h
