@@ -11,7 +11,7 @@ packages="bless geany ghex gitg gitk gpicview gtkhash wxhexeditor"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
 
-########################  PIP
+########################  PYTHON
 
 _echot "------- python2"
 packages="python-pip python-dev"
