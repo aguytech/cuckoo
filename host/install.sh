@@ -21,7 +21,7 @@ file=${_PATH_BASE}/bs/inc
 _echoA "- Use from the HOST with Xubuntu 18.04 bionic already installed"
 _askno "Validate to continue"
 
-_PARTS_SUB="test data ${part_fs} init ssh upgrade global conf root"
+_PARTS_SUB="test data ${part_fs} init ssh upgrade global dev conf root"
 
 for _PART in ${_PARTS_SUB}; do
 	_source_sub "${_PART}"

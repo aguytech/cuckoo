@@ -1,0 +1,34 @@
+#!/bin/bash
+
+_echot "------- tools"
+packages="git lnav mkisofs squashfs-tools "
+packages+=" binutils-common bsdmainutils pv xsysinfo"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- gui"
+packages="bless geany ghex gitg gitk gpicview gtkhash wxhexeditor"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+########################  PIP
+
+_echot "------- python2"
+packages="python-pip python-dev"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- python3"
+packages="python3 python3-pip"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- python2 pip"
+packages="pip setuptools"
+python -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+_echot "------- python3 pip"
+packages="pip grip"
+python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
