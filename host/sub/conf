@@ -21,8 +21,11 @@ _evalr swapon -v
 
 _echot "------- profile"
 export PATH="${PATH}:${_PATH_BS}"
+export QT_QPA_PLATFORMTHEME=qt5ct
 sudo sh -c "echo '# PATH
-export PATH=\${PATH}:${_PATH_BS}' > /etc/profile.d/desktop.sh"
+export PATH=\${PATH}:${_PATH_BS}
+# QT5
+export QT_QPA_PLATFORMTHEME=qt5ct' > /etc/profile.d/desktop.sh"
 
 _echot "------- QT_QPA_PLATFORMTHEME"
 export QT_QPA_PLATFORMTHEME=qt5ct
