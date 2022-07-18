@@ -1,0 +1,62 @@
+#!/bin/bash
+
+_echot "------- required files"
+path_java=jdk-8*linux-x64.tar.gz
+path_sleuthkit=sleuthkit-java_*_amd64.deb
+path_autopsy=autopsy-*.zip
+for path in ${path_java} ${path_sleuthkit} ${path_autopsy}; do
+	while ! ls ${_PATH_SOFTS}/${path} 2>/dev/null; do
+		_echoA "Download file like '${path}' \nand put it in path: ${_PATH_SOFTS}"
+		_askno "Validate to continue"
+	done
+done
+
+_echot "------- packages"
+packages="afflib-tools testdisk ewf-tools xmount fdupes java-common"
+packages+=" imagemagick libde265-0 libheif1"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+
+_echot "------- java"
+file_soft=$( ls ${_PATH_SOFTS}/${path_java} 2>/dev/null )
+file=/usr/local/bin/oracle-java-installer.sh
+_evalr curl -sS https://raw.githubusercontent.com/aguytech/oracle-java-installer/master/oracle-java-installer.sh -o ${file}
+sudo sed -i 's|tar -xvzf|tar -xzf|' /usr/local/bin/oracle-java-installer.sh
+_evalr chmod +x ${file}
+_evalr ${file} --install ${file_soft}
+. /etc/profile.d/jdk.sh
+${file} --status ${file_soft}
+
+_echot "------- sleuthkit"
+file_soft=$( ls ${_PATH_SOFTS}/${path_sleuthkit} 2>/dev/null )
+${_CMD_INS} ${file_soft}
+# get versions
+# read sleuthkit_version_major sleuthkit_version_minor <<<$(echo ${file_soft}|sed 's|^.*/sleuthkit-java_\([0-9_\.]\+\)-\([0-9]\)_amd64.deb|\1 \2|')
+
+_echot "------- autopsy"
+file_soft=$( ls ${_PATH_SOFTS}/${path_autopsy} 2>/dev/null )
+_echoa unzip ${file_soft} && _evalr unzip -q -d /opt/ ${file_soft}
+path=/opt/autopsy
+_evalr mv $(ls -d /opt/autopsy-*) ${path}
+_evalr chown -R ${USER}:${USER} ${path}
+cd /opt/autopsy
+_eval sh unix_setup.sh
+_evalr ln -s ${path}/bin/autopsy /usr/local/bin/autopsy
+_eval cp ${_PATH_BASE}/xtra/autopsy.desktop ~/.local/share/applications/
+# run
+_echoA "After validation, close opened autopsy"
+_askno "Validate to continue"
+autopsy --nosplash
+
+_echot "------- addons"
+_echoA "For more addons, see:"
+echo '##### ReportModules / ForensicExpertWitnessReport
+https://github.com/chriswipat/forensic_expert_witness_report_module
+
+##### IngestModules / FileHistory
+https://medium.com/@markmckinnon_80619/windows-file-history-plugin-a6208da4efa5
+
+##### IngestModules / Volatility
+https://markmckinnon-80619.medium.com/volatility-autopsy-plugin-module-8beecea6396
+'
