@@ -39,8 +39,8 @@ done
 ########################  FORENSIC
 
 parts_for="global binwalk regripper volatility"
-parts_for+=" autopsy wireshark idafree bytecode luyten cfr"
 parts_for+=" conf"
+parts_for+=" autopsy wireshark idafree bytecode luyten cfr"
 
 for _PART in ${parts_for}; do
 	_source_sub "${_PART}" forensic
