@@ -1,0 +1,70 @@
+#!/bin/bash
+
+########################  VOLATILITY 3
+
+_echot "------- pip3"
+packages="pefile yara-python capstone pycryptodome jsonschema leechcorepyc python-snappy"
+_eval python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+_echot "------- volatility3"
+packages="volatility3"
+_eval python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+_echot "------- volatility3 bin"
+cd ~/.local/bin && _eval ln -s vol vol3
+
+_echot "------- vol3 -h"
+vol3 -h
+_askno "Validate to continue"
+
+########################  VOLATILITY 2
+# https://github.com/volatilityfoundation/volatility/wiki/Installation
+
+_echot "------- packages"
+packages="pcregrep libpcre++-dev python-dev"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- pip2"
+packages="distorm3 ipython openpyxl pycrypto pytz ujson yara-python"
+_eval python -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+_echot "------- cmake +"
+packages="cmake"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- libforensic1394"
+_eval cd /tmp
+_eval git clone https://github.com/FreddieWitherden/libforensic1394
+_eval cd libforensic1394
+_eval mkdir build
+_eval cd build
+_eval cmake -G"Unix Makefiles" ../
+_evalr make install
+_eval cd ../python
+_evalr python setup.py install
+_evalr ln -s /usr/local/lib/libforensic1394.so.0.3.0 /usr/lib/libforensic1394.so.2
+_eval cd
+_evalr rm -fR /tmp/libforensic1394
+
+_echot "------- cmake -"
+${_CMD} remove -y cmake
+${_CMD} -y autoremove
+
+_echot "------- volatility2"
+_eval cd /opt
+_evalr git clone https://github.com/volatilityfoundation/volatility.git
+_eval cd volatility
+_evalr rm -fR .git
+_evalr python setup.py install
+
+_echot "------- volatility2 bin"
+_eval cd /usr/local/bin
+_evalr ln -s vol.py vol2
+
+_echot "------- vol2 -h"
+vol2 -h
