@@ -2,6 +2,9 @@
 
 ########################  SYSTEM
 
+_echot "------- root user"
+_ask "Give the password for root" && echo -e "${_ANSWER}\n${_ANSWER}" | sudo passwd root
+
 _echot "------- update grub"
 if [ "${_BTRFS}" ];then
 	_evalr grub-install ${_DEVICE_GRUB}
@@ -23,9 +26,6 @@ if ! [ -d home/shared/repo/bs ]; then
 fi
 
 ########################  USER
-
-_echot "------- root user"
-_ask "Give the password for root" && echo -e "${_ANSWER}\n${_ANSWER}" | sudo passwd root
 
 _echot "------- user paths"
 paths="${HOME}/.local/bin ${HOME}/.local/share/icons ${HOME}/.local/share/applications"
@@ -65,7 +65,7 @@ _echot "------- profile"
 [ -f "${HOME}/.profile" ] && . ${HOME}/.profile
 
 _echot "------- conf user"
-sudo adduser ${USER} users
-sudo adduser ${USER} www-data
-sudo adduser ${USER} audio
-sudo adduser ${USER} video
+sudo adduser -q ${USER} users
+sudo adduser -q ${USER} www-data
+sudo adduser -q ${USER} audio
+sudo adduser -q ${USER} video

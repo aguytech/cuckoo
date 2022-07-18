@@ -1,6 +1,14 @@
 #!/bin/bash
 
-########################  MAIN
-
 _echot "------- upgrade"
 _eval ${_PATH_BS}/upgrade
+
+########################  END
+
+_partadd "${_PART}" "${_FILE_DONE}"
+
+########################  RESTART
+
+_echoA "Restart your computer to append configuration"
+_askno "Validate to reboot"
+sudo reboot

@@ -129,7 +129,7 @@ _eval cp ${_PATH_BASE}/xtra/xfce4-terminal-tmux.desktop ${HOME}/.local/share/app
 _echot "------- languages"
 _echoA "Close language window after validation."
 _askno "Validate to continue"
-sudo gnome-language-selector
+_eval gnome-language-selector
 
 _echot "------- QT5"
 _echoA "After validation, adjust settings for qt5 and close qt5ct window"
