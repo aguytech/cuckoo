@@ -8,6 +8,7 @@ _PATH_CONF=${HOME}/.config/cuckoo
 _PATH_LOG=/var/log/cuckoo
 _CMD="sudo apt"
 _CMD_INS="sudo apt install -y"
+_PATH_SOFTS=$( readlink -f ${_PATH_BASE}/../softs )
 _FILE_PIP3="${_PATH_LOG}/install.pip3"
 _FILE_PIP2="${_PATH_LOG}/install.pip2"
 
@@ -21,25 +22,27 @@ file=${_PATH_BASE}/bs/inc
 _echoA "- Use from the HOST with Xubuntu 18.04 bionic already installed"
 _askno "Validate to continue"
 
-_PARTS_SUB="test data ${part_fs} init ssh upgrade global dev conf root"
+parts_sub="test data ${part_fs} init ssh upgrade global dev conf root"
 
-for _PART in ${_PARTS_SUB}; do
+for _PART in ${parts_sub}; do
 	_source_sub "${_PART}"
 done
 
 ########################  QEMU
 
-_PARTS_QEMU="global share nbd conf"
+parts_qemu="global share nbd conf"
 
-for _PART in ${_PARTS_QEMU}; do
+for _PART in ${parts_qemu}; do
 	_source_sub "${_PART}" qemu
 done
 
 ########################  FORENSIC
 
-_PARTS_FOR="global conf root perso end"
+parts_for="global binwalk regripper volatility"
+parts_for+=" autopsy wireshark idafree bytecode luyten cfr"
+parts_for+=" conf"
 
-for _PART in ${_PARTS_FOR}; do
+for _PART in ${parts_for}; do
 	_source_sub "${_PART}" forensic
 done
 
@@ -49,13 +52,13 @@ _source_sub end
 
 ########################  MENU
 
-_PARTS_ALL=$( ls ${_PATH_BASE}/install )
+parts_install=$( ls ${_PATH_BASE}/install )
 
 while [ "${_PART}" != "quit" ]; do
 	_SDATE=$(date +%s) # renew _SDATE
 	parts_made=" $( cat "${_FILE_DONE}" | xargs ) "
 	parts2do=" "
-	for part in ${_PARTS_ALL}; do
+	for part in ${parts_install}; do
 		[ "${parts_made/ ${part} }" = "${parts_made}" ] && parts2do+="$part "
 	done
 
