@@ -1,7 +1,7 @@
 #!/bin/bash
 
 _echot "------- tools"
-packages="git lnav mkisofs squashfs-tools "
+packages="git lnav mkisofs squashfs-tools"
 packages+=" binutils-common bsdmainutils pv xsysinfo"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
