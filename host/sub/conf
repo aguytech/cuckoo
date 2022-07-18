@@ -34,7 +34,7 @@ _evalr "cp -a ${_PATH_BASE}/xtra/bash-completion/* /usr/share/bash-completion/co
 _echot "------- vim links edit"
 for file in /usr/bin/edit /usr/bin/editor; do
 	[ -e ${file} ] && _evalr rm ${file}
-	_evalr ln -sv /usr/bin/vim ${file}
+	_evalr ln -s /usr/bin/vim ${file}
 done
 
 _echot "------- vim colors"
