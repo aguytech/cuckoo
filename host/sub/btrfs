@@ -42,8 +42,8 @@ fi
 if [ -z ${_SSD_SYS+x} ]; then
 	_askyn "The SYSTEM device '${_DEVICE_SYS}' are they a SSD disk ?"
 	_SSD_SYS=${_ANSWER/n/}
+	_confset _SSD_SYS "${_SSD_SYS}"
 fi
-_confset _SSD_SYS "${_SSD_SYS}"
 
 if [ -z ${_SYSNAME+x} ]; then
 	anstmp=$( sed -n 's|^DISTRIB_CODENAME=\(.*\)$|\1|p' /etc/lsb-release|sed 's/.*/\L&/g' )
@@ -57,8 +57,8 @@ if [ -z ${_MEM+x} ]; then
 	_askno "Give the TMPFS memory size for /tmp or 0 (${anstmp})"
 	_MEM=${_ANSWER:-${anstmp}}
 	_MEM=${_MEM%%0*}
+	_confset _MEM "${_MEM}"
 fi
-_confset _MEM "${_MEM}"
 
 if [ -z ${_USERNAME+x} ]; then
 	anstmp="cuckoo"

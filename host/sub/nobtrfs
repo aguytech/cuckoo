@@ -43,8 +43,8 @@ if [ -z ${_MEM+x} ]; then
 	_askno "Give the TMPFS memory size for /tmp or 0 (${anstmp})"
 	_MEM=${_ANSWER:-${anstmp}}
 	_MEM=${_MEM%%0*}
+	_confset _MEM "${_MEM}"
 fi
-_confset _MEM "${_MEM}"
 
 if [ -z ${_USERNAME+x} ]; then
 	anstmp="cuckoo"
