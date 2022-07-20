@@ -33,3 +33,7 @@ packages="mpv simplescreenrecorder"
 packages+=" gstreamer1.0-plugins-bad libavcodec-extra libdvdnav4 libdvd-pkg libdvdread4 ubuntu-restricted-extras"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- video"
+# remove "libdvd-pkg: `apt-get check` failed, you may have broken packages. Aborting..."
+sudo dpkg-reconfigure libdvd-pkg

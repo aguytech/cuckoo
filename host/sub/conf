@@ -129,9 +129,6 @@ done
 _echot "------- tmux desktop"
 _eval cp ${_PATH_BASE}/xtra/xfce4-terminal-tmux.desktop ${HOME}/.local/share/applications/
 
-#_echot "------- dvd"
-sudo dpkg-reconfigure libdvd-pkg
-
 _echot "------- languages"
 _echoA "Close language window after validation."
 _askno "Validate to continue"
