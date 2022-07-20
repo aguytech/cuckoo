@@ -7,7 +7,8 @@ path_autopsy=autopsy-*.zip
 for path in ${path_java} ${path_sleuthkit} ${path_autopsy}; do
 	while ! ls ${_PATH_SOFTS}/${path} 2>/dev/null; do
 		_echoA "Download file like '${path}' \nand put it in path: ${_PATH_SOFTS}"
-		_askno "Validate to continue"
+		_askyn "y to retry, n to abort"
+		[ "${_ANSWER}" = n ] && return 1
 	done
 done
 
@@ -16,7 +17,6 @@ packages="afflib-tools testdisk ewf-tools xmount fdupes java-common"
 packages+=" imagemagick libde265-0 libheif1"
 ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 	|| { _echoE "Unable to install: ${packages}"; return 1; }
-
 
 _echot "------- java"
 file_soft=$( ls ${_PATH_SOFTS}/${path_java} 2>/dev/null )

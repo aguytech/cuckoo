@@ -1,0 +1,24 @@
+#!/bin/bash
+
+_echot "------- required files"
+path_soft=bytecode-viewer-*.tar.gz
+while ! ls ${_PATH_SOFTS}/${path_soft} 2>/dev/null; do
+	_echoA "Download file like '${path_soft}' \nand put it in path: ${_PATH_SOFTS}"
+	_askyn "y to retry, n to abort"
+	[ "${_ANSWER}" = n ] && return 1
+done
+
+_echot "------- bytecode-viewer"
+file_soft=$( ls ${_PATH_SOFTS}/${path_soft} 2>/dev/null )
+path=/tmp/bt
+[ -d "${path}" ] || _eval mkdir -p ${path}
+_eval cd ${path}
+_eval tar xzf "${file_soft}"
+# wrong file
+! [ -d opt ] && { _echoe "The file: ${file_soft} do not contains the good files"; return 1; }
+_evalr mv opt/bytecode* /opt/
+_evalr mv usr/local/bin/bytecode-viewer /usr/local/bin/
+[ -d ~/.Bytecode-Viewer ] || _eval mv home/*/.Bytecode-Viewer ~/
+_eval mv home/*/.local/share/applications/bytecode-viewer.desktop ~/.local/share/applications/
+_eval cd
+_eval rm -fR ${path}

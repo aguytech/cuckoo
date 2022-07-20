@@ -1,0 +1,13 @@
+#!/bin/bash
+
+_echot "------- repository"
+_evalr add-apt-repository -y ppa:wireshark-dev/stable
+${_CMD} update
+
+_echot "------- packages"
+packages="tshark wireshark"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- desktop"
+cp ${_PATH_BASE}/xtra/org.wireshark.Wireshark.desktop ~/.local/share/applications/

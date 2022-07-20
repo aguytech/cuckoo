@@ -8,7 +8,7 @@ _PATH_CONF=${HOME}/.config/cuckoo
 _PATH_LOG=/var/log/cuckoo
 _CMD="sudo apt"
 _CMD_INS="sudo apt install -y"
-_PATH_SOFTS=$( readlink -f ${_PATH_BASE}/../softs )
+_PATH_SOFTS=${_PATH_BASE}/softs
 _FILE_PIP3="${_PATH_LOG}/install.pip3"
 _FILE_PIP2="${_PATH_LOG}/install.pip2"
 
@@ -46,9 +46,20 @@ for _PART in ${parts_for}; do
 	_source_sub "${_PART}" forensic
 done
 
-########################  FORENSIC
+########################  CUCKOO
 
-_source_sub end
+parts_cuc="data global conf mongodb pgsql qemu"
+parts_cuc+=" pydeep m2crypto guacd tcpdump mitmproxy"
+parts_cuc+=" cuckoo"
+
+for _PART in ${parts_cuc}; do
+	_source_sub "${_PART}" cuckoo
+done
+
+########################  SUB
+
+_PART="perso end"
+_source_sub "${_PART}"
 
 ########################  MENU
 
