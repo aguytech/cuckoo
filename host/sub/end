@@ -3,6 +3,9 @@
 _echot "------- upgrade"
 _eval ${_PATH_BASE}/bs/upgrade
 
+_echot "------- password"
+_echoA "Remove kept passwords in file: ${_FILE_CONF}"
+
 ########################  END
 
 _partadd "${_PART}" "${_FILE_DONE}"
