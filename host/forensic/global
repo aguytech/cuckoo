@@ -36,6 +36,7 @@ python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
 
 ########################  GIT
 
-file=/usr/local/bin/b64sha
-_evalr curl -sS https://raw.githubusercontent.com/labcif/Base64SHA/master/b64sha -o ${file}
-_evalr chmod +x ${file}
+url=https://raw.githubusercontent.com/labcif/Base64SHA/master/b64sha
+file=$( _get_curl b64sha ${url} )
+_evalr cp ${file} /usr/local/bin/b64sha
+_evalr chmod 755 /usr/local/bin/b64sha

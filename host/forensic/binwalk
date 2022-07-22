@@ -15,8 +15,9 @@ _eval python3 -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PI
 
 _echot "------- git squashfs4.5"
 # Install squashfs to extract non-standard SquashFS images
-cd /tmp && _eval curl -s -O https://raw.githubusercontent.com/aguytech/squashfs4.5/master/build.sh
-sh build.sh
+url=https://raw.githubusercontent.com/aguytech/squashfs4.5/master/build.sh
+file=$( _get_curl squashfs45-install.sh ${url} )
+sh ${file}
 
 _echot "------- git jefferson"
 # Install jefferson to extract JFFS2 file systems
@@ -45,10 +46,14 @@ cd .. && _evalr rm -fR yaffshiv
 
 _echot "------- git sdtraces"
 # Install unstuff (closed source) to extract StuffIt archive files
-_eval mkdir /tmp/sdtraces
-cd /tmp/sdtraces && _eval curl -sS http://downloads.tuxfamily.org/sdtraces/stuffit520.611linux-i386.tar.gz | tar -zxv
+url=http://downloads.tuxfamily.org/sdtraces/stuffit520.611linux-i386.tar.gz
+file=$( _get_curl stuffit520.611linux-i386.tar.gz ${url} )
+path=/tmp/sdtraces
+_eval mkdir ${path}
+_eval cd ${path}
+_eval tar -xzf ${file}
 _evalr cp bin/* /usr/local/bin/
-cd .. && _evalr rm -fR sdtraces
+_eval cd .. && _eval rm -fR sdtraces
 
 ########################  BINWALK
 

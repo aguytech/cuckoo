@@ -21,7 +21,8 @@ ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
 _echot "------- java"
 file_soft=$( ls ${_PATH_SOFTS}/${path_java} 2>/dev/null )
 file=/usr/local/bin/oracle-java-installer.sh
-_evalr curl -sS https://raw.githubusercontent.com/aguytech/oracle-java-installer/master/oracle-java-installer.sh -o ${file}
+url=https://raw.githubusercontent.com/aguytech/oracle-java-installer/master/oracle-java-installer.sh
+_evalr mv $( _get_curl oracle-java-installer.sh ${url} ) ${file}
 sudo sed -i 's|tar -xvzf|tar -xzf|' /usr/local/bin/oracle-java-installer.sh
 _evalr chmod +x ${file}
 _evalr ${file} --install ${file_soft}
