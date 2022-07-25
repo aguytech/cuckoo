@@ -1,7 +1,15 @@
 #!/bin/bash
 
-_echot "------- upgrade"
-_eval ${_PATH_BASE}/bs/upgrade
+_echot "------- update"
+${_CMD} update
+
+_echot "------- dist-upgrade"
+${_CMD} -y dist-upgrade
+
+# _echot "------- clean"
+# ${_CMD} -y autoremove
+# ${_CMD} clean
+# ${_CMD} autoclean
 
 _echot "------- password"
 _echoA "Remove kept passwords in file: ${_FILE_CONF}"
