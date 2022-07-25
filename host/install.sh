@@ -56,10 +56,13 @@ for _PART in ${parts_cuc}; do
 	_source_sub "${_PART}" cuckoo
 done
 
-########################  SUB
+########################  PERSO
 
-_PART="perso end"
-_source_sub "${_PART}"
+_source_sub perso
+
+########################  END
+
+_source_sub end
 
 ########################  MENU
 

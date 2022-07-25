@@ -71,7 +71,9 @@ for opt in ${opts}; do
 done
 
 _echot "------- meld style"
-_evalr cp ${_PATH_BASE}/conf/meld-dark.xml /usr/share/meld/styles/
+file=/usr/share/meld/styles/meld-dark.xml
+_keepmv ${file}
+_evalr cp ${_PATH_BASE}/conf/meld-dark.xml ${file}
 
 _echot "------- icons"
 path=/usr/share/icons/Foralyse
