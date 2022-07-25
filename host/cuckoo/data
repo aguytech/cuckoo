@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ -z ${_VIRT_ENV+x} ]; then
+	_askyn "Use virtualenv for cuckoo?"
+	_VIRT_ENV=${_ANSWER/n/}
+	_confset _VIRT_ENV "${_VIRT_ENV}"
+fi
+
+if [ -z ${_PWD_MONGO_ADMIN+x} ]; then
+	anstmp=$( _pwd )
+	_askno "Give admin password (${anstmp})"
+	_PWD_MONGO_ADMIN=${_ANSWER:-${anstmp}}
+	_confset _PWD_MONGO_ADMIN "${_PWD_MONGO_ADMIN}"
+fi
+
+if [ -z ${_PWD_MONGO_CUCKOO+x} ]; then
+	anstmp=$( _pwd )
+	_askno "Give cuckoo password (${anstmp})"
+	_PWD_MONGO_CUCKOO=${_ANSWER:-${anstmp}}
+	_confset _PWD_MONGO_CUCKOO "${_PWD_MONGO_CUCKOO}"
+fi
+
+if [ -z ${_PWD_PGSQL_CUCKOO+x} ]; then
+	anstmp=$( _pwd )
+	_askno "Give admin password (${anstmp})"
+	_PWD_PGSQL_CUCKOO=${_ANSWER:-${anstmp}}
+	_confset _PWD_PGSQL_CUCKOO "${_PWD_PGSQL_CUCKOO}"
+fi
+
+
+if [ -z "${_CUCKOO_PROFILE}" ]; then
+	anstmp=Win7SP1x64
+	_askno "Give the guest profile for volatility (${anstmp})"
+	_VOL_PROFILE=${_ANSWER:-${anstmp}}
+	_confset _VOL_PROFILE "${_VOL_PROFILE}"
+fi
+
+_echoA "Keep this following passwords:"
+echo "cuckoo=${_PWD_PGSQL_CUCKOO}"
+echo "admin=${_PWD_MONGO_ADMIN}"
+echo "cuckoo=${_PWD_MONGO_CUCKOO}"

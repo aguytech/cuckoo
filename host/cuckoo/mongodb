@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Django
+_echot "------- packages"
+packages="mongodb"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- status"
+systemctl status mongodb.service
+
+_echot "------- listen"
+ss -ltn|grep 27017
+
+_echot "------- test"
+mongo 127.0.0.1:27017 >/dev/null 2>&1 <<<"show dbs;" && echo "ok" || _exite "Unable to connect to mongodb: 127.0.0.1:27017/admin"
+
+########################  CONF
+
+_echot "------- user admin"
+query="use admin;
+db.createUser({ user: 'admin', pwd: '${_PWD_MONGO_ADMIN}', roles:[{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }] });"
+mongo 127.0.0.1:27017 <<<${query}
+
+_echot "------- user cuckoo"
+query="use cuckoo;
+db.createUser({ user: 'cuckoo', pwd: '${_PWD_MONGO_CUCKOO}', roles:[{ role: 'dbOwner', db: 'cuckoo' }] });"
+mongo 127.0.0.1:27017/cuckoo <<<${query}
+
+_echot "------- show dbs"
+mongo 127.0.0.1:27017 <<<"show dbs;"
+
+#mongo 127.0.0.1:27017/admin <<<"db.dropUser('admin');"
+#mongo 127.0.0.1:27017/admin <<<"printjson(db.getUsers());"
+#mongo 127.0.0.1:27017/cuckoo <<<"printjson(db.getUsers());"
+#mongo <<<"printjson(db.system.users.find());"
+#db.grantRolesToUser('admin', [{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'readAnyDatabase', db: 'admin' }])
+
+_echot "------- conf"
+file=/etc/mongodb.conf
+_keepcp ${file}
+while read str val; do
+sudo sed -i "s|#\?\(${str}\) *=.*$|\1 = ${val}|" ${file}
+done <<< "port  27017
+journal  true
+auth  true"
+#noauth  false
+#verbose  true
+
+_echot "------- restart"
+_evalr systemctl restart mongodb && _eval sleep 2
+
+_echot "------- test anonymous"
+mongo 127.0.0.1:27017 >/dev/null 2>&1 <<<"show dbs;" && _exite "Anonymous access are allowed"
+
+_echot "------- test admin"
+mongo -u admin -p ${_PWD_MONGO_ADMIN} 127.0.0.1:27017/admin >/dev/null 2>&1 <<<"show dbs;" \
+	|| _exite "Unable to connect to mongodb: 127.0.0.1:27017 with admin:${_PWD_MONGO_ADMIN}"
+
+_echot "------- test cuckoo"
+mongo -u cuckoo -p ${_PWD_MONGO_CUCKOO} 127.0.0.1:27017/cuckoo >/dev/null 2>&1 <<<"printjson(db.getUsers());" \
+	|| _exite "Unable to connect to mongodb: 127.0.0.1:27017 with cuckoo:${_PWD_MONGO_ADMIN}"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+_echot "------- tcpdump"
+packages="git swig libjpeg-dev zlib1g-dev libffi-dev libssl-dev"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+# packages="apparmor-utils"
+# ${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+# 	|| { _echoE "Unable to install: ${packages}"; return 1; }
+# _evalr aa-disable /usr/sbin/tcpdump
+
+_evalr groupadd pcap
+_evalr chgrp pcap /usr/sbin/tcpdump
+_evalr setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump
+
+# verification
+_echoA "The next show have to be:"
+_echoa "/usr/sbin/tcpdump = cap_net_admin,cap_net_raw+eip"
+_eval getcap /usr/sbin/tcpdump

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+_echot "------- postgresql"
+packages="postgresql libpq-dev"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- pip2"
+packages="psycopg2"
+python -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+_echot "------- status"
+systemctl status postgresql.service
+
+_echot "------- listen"
+ss -ltn|grep 5432
+
+########################  CONF
+
+_echot "------- db"
+query="SELECT datname FROM pg_database WHERE datname = 'cuckoo'"
+sudo -u postgres psql -tc "${query}" | grep -q cuckoo ||  sudo -u postgres psql -tc "CREATE DATABASE cuckoo"
+
+_echot "------- user"
+query="DO
+\$do\$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_user WHERE  usename = 'cuckoo')
+    THEN
+        CREATE ROLE cuckoo LOGIN PASSWORD '${_PWD_PGSQL_CUCKOO}';
+        GRANT ALL PRIVILEGES ON DATABASE cuckoo TO cuckoo;
+    END IF;
+END
+\$do\$;"
+sudo -u postgres psql -tc "${query}"
+
+#REVOKE all on database cuckoo from cuckoo;
+#DROP ROLE cuckoo;
+
+_echot "------- test"
+PGPASSWORD=${_PWD_PGSQL_CUCKOO} psql -U cuckoo -h 127.0.0.1 -c "\q" && echo "ok" \
+	|| _exite "Unable to connect to 127.0.0.1 cuckoo@${_PWD_PGSQL_CUCKOO}"

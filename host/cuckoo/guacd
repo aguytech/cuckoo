@@ -1,0 +1,12 @@
+#!/bin/bash
+
+_echot "------- packages"
+packages="libguac-client-rdp0 libguac-client-vnc0 libguac-client-ssh0 guacd"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }
+
+_echot "------- status"
+systemctl status guacd.service
+
+_echot "------- listen"
+ss -ltn|grep 4822

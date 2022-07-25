@@ -1,0 +1,6 @@
+#!/bin/bash
+
+_echot "------- qemu"
+packages="qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils python-libvirt"
+${_CMD_INS} ${packages} && _partadd "${packages}" ${_FILE_PCK} \
+	|| { _echoE "Unable to install: ${packages}"; return 1; }

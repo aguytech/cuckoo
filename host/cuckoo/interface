@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ -z "${_CUCKOO_BRIDGE}" ]; then
+  anstmp=virbr0
+  _askno "Give the name of host bridge network (${anstmp})"
+  _VOL_PROFILE=${_ANSWER:-${anstmp}}
+  _confset _VOL_PROFILE "${_VOL_PROFILE}"
+fi
+if [ -z "${_CUCKOO_USER}" ]; then
+  anstmp="nikita "
+  _askno "Give the name of user for network bridge (${anstmp})"
+  _VOL_PROFILE=${_ANSWER:-${anstmp}}
+  _confset _VOL_PROFILE "${_VOL_PROFILE}"
+fi
+
+if [ -z "${_CUCKOO_VMS}" ]; then
+  anstmp=""
+  _askno "Give the list of VMs to use ex:${anstmp} ()"
+  _VOL_PROFILE=${_ANSWER:-${_ANSWER}}
+  _confset _VOL_PROFILE "${_VOL_PROFILE}"
+fi
+
+########################  CONF
+
+_echot "------- interface"
+for vm in ${_CUCKOO_VMS}; do
+  sudo tunctl -b -u ${_CUCKOO_USER} -t tap_${_CUCKOO_VMS}
+  sudo ip link set tap_${_CUCKOO_VMS} master ${_CUCKOO_BRIDGE}
+  sudo ip link set dev tap_${_CUCKOO_VMS} up
+  sudo ip link set dev ${_CUCKOO_BRIDGE} up
+done

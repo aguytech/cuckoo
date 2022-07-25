@@ -50,7 +50,7 @@ done
 
 parts_cuc="data global mongodb pgsql qemu"
 parts_cuc+=" pydeep m2crypto guacd tcpdump mitmproxy"
-parts_cuc+=" cuckoo conf"
+parts_cuc+=" cuckoo conf interface"
 
 for _PART in ${parts_cuc}; do
 	_source_sub "${_PART}" cuckoo

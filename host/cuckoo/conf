@@ -1,0 +1,57 @@
+#!/bin/bash
+
+_echot "------- sysctl"
+sudo sh -c "echo 'fs.file-max=3253172' > /etc/sysctl.d/90-cuckoo.conf"
+
+_echot "------- limits"
+file=/etc/security/limits.conf
+_keepcp ${file}
+sudo sh -c "echo '
+# cuckoo
+*    soft     nofile         4096
+*    hard     nofile         16384' >> ${file}"
+
+_echot "------- init"
+[ -d ${HOME}/.cuckoo ] || _eval cuckoo -d
+_keepcp ${HOME}/cuckoo
+
+_echot "------- cuckoo"
+file=${HOME}/.cuckoo/conf/cuckoo.conf
+while read str val; do
+sed -i "/${str} =/ s|=.*$|= ${val}|" ${file}
+done <<< "machinery  kvm
+memory_dump yes
+ip  192.168.122.1
+connection  postgresql://cuckoo:${_PWD_PGSQL_CUCKOO}@localhost:5432/cuckoo
+guacd_host localhost
+guacd_port 4822"
+
+_echot "------- auxiliary"
+file=${HOME}/.cuckoo/conf/auxiliary.conf
+while read str val; do
+sed -i "/${str} =/ s|=.*$|= ${val}|" ${file}
+done <<< "tcpdump  /usr/sbin/tcpdump
+mitmdump  /usr/local/bin/mitmdump"
+
+_echot "------- memory"
+file=~/.cuckoo/conf/memory.conf
+while read str val; do
+sed -i "/${str} =/ s|=.*$|= ${val}|" ${file}
+done <<< "guest_profile  ${_VOL_PROFILE}
+delete_memdump  no"
+
+_echot "------- processing"
+file=~/.cuckoo/conf/processing.conf
+sed -i "/^.memory.$/,/^$/ s|^enabled = .*$|enabled = yes|" ${file}
+
+_echot "------- reporting"
+file=~/.cuckoo/conf/reporting.conf
+# singlefile
+sed -i "/^.singlefile.$/,/^$/ s|^enabled = .*$|enabled = yes|" ${file}
+sed -i "/^.singlefile.$/,/^$/ s|^html = .*$|html = yes|" ${file}
+sed -i "/^.singlefile.$/,/^$/ s|^pdf = .*$|pdf = yes|" ${file}
+# mongodb
+sed -i "/^.mongodb.$/,/^$/ s|^enabled = .*$|enabled = yes|" ${file}
+sed -i "/^.mongodb.$/,/^$/ s|^db = .*$|db = cuckoo|" ${file}
+sed -i "/^.mongodb.$/,/^$/ s|^username = .*$|username = cuckoo|" ${file}
+sed -i "/^.mongodb.$/,/^$/ s|^password = .*$|password = ${_PWD_MONGO_CUCKOO}|" ${file}

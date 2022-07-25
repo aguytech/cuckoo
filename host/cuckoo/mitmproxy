@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# https://mitmproxy.org/downloads/
+
+version=3.0.4
+path=/opt/mitmproxy
+[ -d ${path} ] || _evalr mkdir ${path}
+
+_echot "------- pathod"
+url=https://snapshots.mitmproxy.org/${version}/mitmproxy-v${version}-linux.tar.gz
+file=$( _get_curl mitmproxy-v${version}-linux.tar.gz ${url} )
+_evalr tar xzf ${file} -C ${path}/
+
+_echot "------- mitmproxy"
+url=https://snapshots.mitmproxy.org/${version}/pathod-v${version}-linux.tar.gz
+file=$( _get_curl pathod-v${version}-linux.tar.gz ${url} )
+_evalr tar xzf ${file} -C ${path}/
+
+_echot "------- bin"
+files="mitmdump mitmproxy mitmweb pathoc pathod"
+for file in $files; do
+	[ -f "/usr/local/bin/${file}" ] && _evalr rm /usr/local/bin/${file}
+	_evalr ln -s ${path}/${file} /usr/local/bin/${file}
+done
+
+_echot "------- verifiy"
+for file in $files; do
+	_eval ls -al /usr/local/bin/${file}
+done

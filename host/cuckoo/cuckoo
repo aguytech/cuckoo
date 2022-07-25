@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ "${_VIRT_ENV}" ]; then
+	_echot "------- pip2 virtualenv"
+	packages="virtualenv"
+	python -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+		|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
+
+	cd /opt
+	virtualenv venv
+	. venv/bin/activate
+fi
+
+_echot "------- pip2 cuckoo"
+packages="cuckoo"
+python -m pip install -U ${packages} && _partadd "${packages}" ${_FILE_PIP3} \
+	|| { _echoE "Unable to pip2 install: ${packages}"; return 1; }
